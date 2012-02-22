@@ -1,13 +1,13 @@
 #pragma once
-#include <string>
+#include <atlstr.h>
 
 namespace Ult
 {
-	std::wstring Utf8ToUnicode(const char* src,    int len);
-	std::string  UnicodeToUtf8(const wchar_t* src, int len);
-	std::string  UnicodeToUtf8(const wchar_t* src);
-	std::wstring AnsiToUnicode(const char* src,    int len);
-	std::wstring AnsiToUnicode(const char* src);
-	std::string  UnicodeToAnsi(const wchar_t* src, int len);
-	std::string  UnicodeToAnsi(const wchar_t* src);
+	CStringW Utf8ToUnicode(const char* src,    int len);
+	CStringA UnicodeToUtf8(const wchar_t* src, int len);
+	CStringA UnicodeToUtf8(const wchar_t* src);
+	CStringW AnsiToUnicode(const char* src,    int len);
+	CStringW AnsiToUnicode(const char* src);
+	CStringA UnicodeToAnsi(const wchar_t* src, int len);
+	CStringA UnicodeToAnsi(const wchar_t* src);
 }

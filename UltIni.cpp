@@ -26,7 +26,7 @@ bool UltIni::WriteString(const wchar_t* section, const wchar_t* entry, const wch
 	if (configFile_.IsEmpty()) {
 		return false;
 	}
-	return WritePrivateProfileString(section, entry, str, configFile_);
+	return 0 != WritePrivateProfileString(section, entry, str, configFile_);
 }
 
 CString UltIni::GetString(const wchar_t* section, const wchar_t* entry)
