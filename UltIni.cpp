@@ -39,3 +39,15 @@ CString UltIni::GetString(const wchar_t* section, const wchar_t* entry)
 	str.ReleaseBuffer();
 	return str;
 }
+
+bool UltIni::WriteInt(const wchar_t* section, const wchar_t* entry, int integer)
+{
+	CString str;
+	str.Format(L"%d", integer);
+	return WriteString(section, entry, str);
+}
+
+int UltIni::GetInt(const wchar_t* section, const wchar_t* entry)
+{
+	return GetPrivateProfileInt(section, entry, -1, configFile_);
+}
