@@ -40,14 +40,14 @@ CString UltIni::GetString(const wchar_t* section, const wchar_t* entry)
 	return str;
 }
 
-bool UltIni::WriteInt(const wchar_t* section, const wchar_t* entry, int integer)
+bool UltIni::WriteInt(const wchar_t* section, const wchar_t* entry, int number)
 {
 	CString str;
-	str.Format(L"%d", integer);
+	str.Format(L"%d", number);
 	return WriteString(section, entry, str);
 }
 
-int UltIni::GetInt(const wchar_t* section, const wchar_t* entry)
+int UltIni::GetInt( const wchar_t* section, const wchar_t* entry, int number /*= -1*/ )
 {
-	return GetPrivateProfileInt(section, entry, -1, configFile_);
+	return GetPrivateProfileInt(section, entry, number, configFile_);
 }
