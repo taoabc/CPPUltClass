@@ -29,15 +29,15 @@ bool UltIni::WriteString(const wchar_t* section, const wchar_t* entry, const wch
 	return 0 != WritePrivateProfileString(section, entry, str, configFile_);
 }
 
-CString UltIni::GetString(const wchar_t* section, const wchar_t* entry)
+CString UltIni::GetString(const wchar_t* section, const wchar_t* entry, const wchar_t* szDefault /*= NULL*/)
 {
 	if (configFile_.IsEmpty()) {
 		return L"";
 	}
-	CString str;
-	GetPrivateProfileString(section, entry, NULL, str.GetBuffer(MAX_VALUE_LEN), MAX_VALUE_LEN, configFile_);
-	str.ReleaseBuffer();
-	return str;
+	CString ret;
+	GetPrivateProfileString(section, entry, szDefault, ret.GetBuffer(MAX_VALUE_LEN), MAX_VALUE_LEN, configFile_);
+	ret.ReleaseBuffer();
+	return ret;
 }
 
 bool UltIni::WriteInt(const wchar_t* section, const wchar_t* entry, int number)
@@ -47,7 +47,7 @@ bool UltIni::WriteInt(const wchar_t* section, const wchar_t* entry, int number)
 	return WriteString(section, entry, str);
 }
 
-int UltIni::GetInt( const wchar_t* section, const wchar_t* entry, int number /*= -1*/ )
+int UltIni::GetInt( const wchar_t* section, const wchar_t* entry, int iDefault /*= -1*/ )
 {
-	return GetPrivateProfileInt(section, entry, number, configFile_);
+	return GetPrivateProfileInt(section, entry, iDefault, configFile_);
 }
