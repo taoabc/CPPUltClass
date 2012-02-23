@@ -11,6 +11,11 @@ CStringW Ult::Utf8ToUnicode(const char* src, int len)
 	return str;
 }
 
+CStringW Ult::Utf8ToUnicode(const char* src)
+{
+	return Utf8ToUnicode(src, strlen(src) + 1);
+}
+
 CStringA Ult::UnicodeToUtf8(const wchar_t* src, int len)
 {
 	int l = ::WideCharToMultiByte(CP_UTF8, 0, src, len, NULL, 0, NULL, NULL);

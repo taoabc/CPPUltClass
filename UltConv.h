@@ -4,6 +4,7 @@
 namespace Ult
 {
 	CStringW Utf8ToUnicode(const char* src,    int len);
+	CStringW Utf8ToUnicode(const char* src);
 
 	CStringA UnicodeToUtf8(const wchar_t* src, int len);
 	CStringA UnicodeToUtf8(const wchar_t* src);
