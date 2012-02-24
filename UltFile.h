@@ -9,5 +9,5 @@
 
 namespace Ult
 {
-	CString GetMaxFreeSapceDisk(unsigned int* freeSpace);
+	CString GetMaxFreeSapceDisk(unsigned int* spaceInM);
 }
