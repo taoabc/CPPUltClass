@@ -14,7 +14,7 @@ CString Ult::GetMaxFreeSapceDisk( unsigned int* spaceInM )
 	
 	if (0 != GetLogicalDriveStrings(bufLen, buf)) {
 		wchar_t* pDrive = buf;
-		int i = 0;
+		DWORD i = 0;
 		while (i <= bufLen) {
 			if (DRIVE_FIXED == GetDriveType(pDrive)) {
 				GetDiskFreeSpaceEx(pDrive, &freespace, NULL, NULL);
