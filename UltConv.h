@@ -1,3 +1,8 @@
+/*
+** Ìá¹©±àÂë×ª»»
+** author
+**   taoabc@gmail.com
+*/
 #pragma once
 #include <atlstr.h>
 

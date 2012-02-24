@@ -1,3 +1,8 @@
+/*
+** ini文件操作类
+** author
+**   taoabc@gmail.com
+*/
 #pragma once
 
 #include <atlstr.h>
