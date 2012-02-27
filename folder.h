@@ -8,7 +8,7 @@
 
 #include <string>
 
-namespace Ult
+namespace ult
 {
 	std::wstring GetMaxFreeSapceDisk(unsigned int* space_in_mb);
 }

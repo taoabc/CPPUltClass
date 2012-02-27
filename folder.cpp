@@ -2,7 +2,7 @@
 #include "folder.h"
 #include <Windows.h>
 
-namespace Ult {
+namespace ult {
 std::wstring GetMaxFreeSapceDisk( unsigned int* space_in_mb )
 {
 	DWORD buf_len = GetLogicalDriveStrings(0, NULL);

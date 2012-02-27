@@ -2,7 +2,7 @@
 #include "text-encoding.h"
 #include <Windows.h>
 
-namespace Ult {
+namespace ult {
 std::wstring Utf8ToUnicode(const char* src, int len)
 {
 	int buf_len = ::MultiByteToWideChar(CP_UTF8, 0, src, len, NULL, 0);
