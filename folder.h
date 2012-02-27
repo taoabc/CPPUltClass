@@ -6,11 +6,11 @@
 #ifndef ULT_FILE_H_
 #define ULT_FILE_H_
 
-#include <atlstr.h>
+#include <string>
 
 namespace Ult
 {
-	CString GetMaxFreeSapceDisk(unsigned int* space_in_mb);
+	std::wstring GetMaxFreeSapceDisk(unsigned int* space_in_mb);
 }
 
 #endif // ULT_FILE_H_

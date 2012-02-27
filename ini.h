@@ -6,23 +6,28 @@
 #ifndef ULT_INI_H_
 #define ULT_INI_H_
 
-#include <atlstr.h>
+#include <string>
 
-class UltIni
+namespace ult {
+class Ini
 {
 public:
-	UltIni(void);
-  ~UltIni(void);
+	Ini(void);
+  ~Ini(void);
 
-	UltIni(const CString& filename);
-	void AssignFile(const CString& filename);
+	Ini(const wchar_t* filename);
+	void AssignFile(const wchar_t* filename);
 	bool WriteString(const wchar_t* section, const wchar_t* entry, const wchar_t* str);
-	CString GetString(const wchar_t* section, const wchar_t* entry, const wchar_t* string_default=NULL);
+	std::wstring GetString(const wchar_t* section, const wchar_t* entry, const wchar_t* string_default=NULL);
 	bool WriteInt(const wchar_t* section, const wchar_t* entry, int number);
 	int GetInt(const wchar_t* section, const wchar_t* entry, int num_default = -1);
 private:
-	enum {kMaxValueLen = 1024};
-	CString config_filename_;
+	enum {
+    kMaxValueLen = 1024,
+    kMaxIntLength = 256
+  };
+	std::wstring config_filename_;
 };
+} //namespace ult
 
 #endif // ULT_INI_H_

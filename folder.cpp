@@ -1,17 +1,17 @@
 #include "StdAfx.h"
-#include "UltFile.h"
+#include "folder.h"
 #include <Windows.h>
 
 namespace Ult {
-CString GetMaxFreeSapceDisk( unsigned int* space_in_mb )
+std::wstring GetMaxFreeSapceDisk( unsigned int* space_in_mb )
 {
 	DWORD buf_len = GetLogicalDriveStrings(0, NULL);
-	wchar_t* buf = new wchar_t[buf_len];
+	wchar_t* buf = new wchar_t [buf_len];
 
 	ULARGE_INTEGER freespace;
 	ULONGLONG maxfree = 0;
 
-	CString disk;
+	std::wstring disk;
 	
 	if (0 != GetLogicalDriveStrings(buf_len, buf)) {
 		wchar_t* drive = buf;
@@ -22,7 +22,7 @@ CString GetMaxFreeSapceDisk( unsigned int* space_in_mb )
 				ULONGLONG t = freespace.QuadPart;
 				if (t > maxfree) {
 					maxfree = t;
-					disk.SetString(drive);
+					disk.assign(drive);
 				}
 			}
 			i += wcslen(drive) + 1;
@@ -31,7 +31,7 @@ CString GetMaxFreeSapceDisk( unsigned int* space_in_mb )
 	}
 	delete[] buf;
 
-	*space_in_mb = maxfree / 1024 / 1024;
+	*space_in_mb = static_cast<int>(maxfree / 1024 / 1024);
 	return disk;
 }
 } //namespace Ult
