@@ -2,7 +2,8 @@
 #include "UltConv.h"
 #include <Windows.h>
 
-CStringW Ult::Utf8ToUnicode(const char* src, int len)
+namespace Ult {
+CStringW Utf8ToUnicode(const char* src, int len)
 {
 	int l = ::MultiByteToWideChar(CP_UTF8, 0, src, len, NULL, 0);
 	CStringW str;
@@ -11,12 +12,12 @@ CStringW Ult::Utf8ToUnicode(const char* src, int len)
 	return str;
 }
 
-CStringW Ult::Utf8ToUnicode(const char* src)
+CStringW Utf8ToUnicode(const char* src)
 {
 	return Utf8ToUnicode(src, strlen(src) + 1);
 }
 
-CStringA Ult::UnicodeToUtf8(const wchar_t* src, int len)
+CStringA UnicodeToUtf8(const wchar_t* src, int len)
 {
 	int l = ::WideCharToMultiByte(CP_UTF8, 0, src, len, NULL, 0, NULL, NULL);
 	CStringA str;
@@ -25,12 +26,12 @@ CStringA Ult::UnicodeToUtf8(const wchar_t* src, int len)
 	return str;
 }
 
-CStringA Ult::UnicodeToUtf8(const wchar_t* src)
+CStringA UnicodeToUtf8(const wchar_t* src)
 {
 	return UnicodeToUtf8(src, wcslen(src)+1);
 }
 
-CStringW Ult::AnsiToUnicode(const char* src, int len)
+CStringW AnsiToUnicode(const char* src, int len)
 {
 	int l = ::MultiByteToWideChar(CP_ACP, 0, src, len, NULL, 0);
 	CStringW str;
@@ -39,12 +40,12 @@ CStringW Ult::AnsiToUnicode(const char* src, int len)
 	return str;
 }
 
-CStringW Ult::AnsiToUnicode(const char* src)
+CStringW AnsiToUnicode(const char* src)
 {
 	return AnsiToUnicode(src, strlen(src)+1);
 }
 
-CStringA Ult::UnicodeToAnsi(const wchar_t* src, int len)
+CStringA UnicodeToAnsi(const wchar_t* src, int len)
 {
 	int l = ::WideCharToMultiByte(CP_ACP, 0, src, len, NULL, 0, NULL, NULL);
 	CStringA str;
@@ -53,7 +54,8 @@ CStringA Ult::UnicodeToAnsi(const wchar_t* src, int len)
 	return str;
 }
 
-CStringA Ult::UnicodeToAnsi(const wchar_t* src)
+CStringA UnicodeToAnsi(const wchar_t* src)
 {
 	return UnicodeToAnsi(src, wcslen(src) + 1);
 }
+}//namespace Ult

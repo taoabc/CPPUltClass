@@ -3,11 +3,14 @@
 ** author
 **   taoabc@gmail.com
 */
-#pragma once
+#ifndef ULT_FILE_H_
+#define ULT_FILE_H_
 
 #include <atlstr.h>
 
 namespace Ult
 {
-	CString GetMaxFreeSapceDisk(unsigned int* spaceInM);
+	CString GetMaxFreeSapceDisk(unsigned int* space_in_mb);
 }
+
+#endif // ULT_FILE_H_

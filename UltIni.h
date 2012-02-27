@@ -3,7 +3,8 @@
 ** author
 **   taoabc@gmail.com
 */
-#pragma once
+#ifndef ULT_INI_H_
+#define ULT_INI_H_
 
 #include <atlstr.h>
 
@@ -11,15 +12,17 @@ class UltIni
 {
 public:
 	UltIni(void);
-	~UltIni(void);
+  ~UltIni(void);
 
-	UltIni(const CString& fileName);
-	void AssignFile(const CString& fileNname);
+	UltIni(const CString& filename);
+	void AssignFile(const CString& filename);
 	bool WriteString(const wchar_t* section, const wchar_t* entry, const wchar_t* str);
-	CString GetString(const wchar_t* section, const wchar_t* entry, const wchar_t* szDefault=NULL);
+	CString GetString(const wchar_t* section, const wchar_t* entry, const wchar_t* string_default=NULL);
 	bool WriteInt(const wchar_t* section, const wchar_t* entry, int number);
-	int GetInt(const wchar_t* section, const wchar_t* entry, int iDefault = -1);
+	int GetInt(const wchar_t* section, const wchar_t* entry, int num_default = -1);
 private:
-	enum {MAX_VALUE_LEN = 1024};
-	CString configFile_;
+	enum {kMaxValueLen = 1024};
+	CString config_filename_;
 };
+
+#endif // ULT_INI_H_
