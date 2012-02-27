@@ -10,7 +10,7 @@
 
 namespace ult
 {
-	std::wstring GetMaxFreeSapceDisk(unsigned int* space_in_mb);
+	std::wstring GetMaxFreeSapceDisk(unsigned int* size_in_mb);
 }
 
 #endif // ULT_FILE_H_

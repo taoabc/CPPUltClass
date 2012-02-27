@@ -3,7 +3,7 @@
 #include <Windows.h>
 
 namespace ult {
-std::wstring GetMaxFreeSapceDisk( unsigned int* space_in_mb )
+std::wstring GetMaxFreeSapceDisk( unsigned int* size_in_mb )
 {
 	DWORD buf_len = GetLogicalDriveStrings(0, NULL);
 	wchar_t* buf = new wchar_t [buf_len];
@@ -31,7 +31,7 @@ std::wstring GetMaxFreeSapceDisk( unsigned int* space_in_mb )
 	}
 	delete[] buf;
 
-	*space_in_mb = static_cast<int>(maxfree / 1024 / 1024);
+	*size_in_mb = static_cast<int>(maxfree / 1024 / 1024);
 	return disk;
 }
 } //namespace Ult
