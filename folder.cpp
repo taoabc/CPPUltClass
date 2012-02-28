@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "folder.h"
 #include <Windows.h>
+#include <shlobj.h>
 
 namespace ult {
 std::wstring GetMaxFreeSapceDisk( unsigned int* size_in_mb )
@@ -25,7 +26,7 @@ std::wstring GetMaxFreeSapceDisk( unsigned int* size_in_mb )
 					disk.assign(drive);
 				}
 			}
-			i += wcslen(drive) + 1;
+			i += static_cast<DWORD>(wcslen(drive)) + 1;
 			drive += i;
 		}
 	}
@@ -34,4 +35,13 @@ std::wstring GetMaxFreeSapceDisk( unsigned int* size_in_mb )
 	*size_in_mb = static_cast<int>(maxfree / 1024 / 1024);
 	return disk;
 }
+
+std::wstring GetAppDataPath( void )
+{
+	wchar_t buf[MAX_PATH];
+	::SHGetSpecialFolderPath(NULL, buf, CSIDL_APPDATA, false);
+	std::wstring result(buf);
+	return result;
+}
+
 } //namespace Ult

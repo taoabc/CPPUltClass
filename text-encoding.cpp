@@ -13,9 +13,9 @@ std::wstring Utf8ToUnicode(const char* src, int len)
 	return result;
 }
 
-std::wstring Utf8ToUnicode(const char* src)
+std::wstring Utf8ToUnicode(const std::string& src)
 {
-	return Utf8ToUnicode(src, strlen(src) + 1);
+	return Utf8ToUnicode(src.c_str(), static_cast<int>(src.length() + 1));
 }
 
 std::string UnicodeToUtf8(const wchar_t* src, int len)
@@ -28,9 +28,9 @@ std::string UnicodeToUtf8(const wchar_t* src, int len)
 	return result;
 }
 
-std::string UnicodeToUtf8(const wchar_t* src)
+std::string UnicodeToUtf8(const std::wstring& src)
 {
-	return UnicodeToUtf8(src, wcslen(src)+1);
+	return UnicodeToUtf8(src.c_str(), static_cast<int>(src.length() + 1));
 }
 
 std::wstring AnsiToUnicode(const char* src, int len)
@@ -43,9 +43,9 @@ std::wstring AnsiToUnicode(const char* src, int len)
 	return result;
 }
 
-std::wstring AnsiToUnicode(const char* src)
+std::wstring AnsiToUnicode(const std::string& src)
 {
-	return AnsiToUnicode(src, strlen(src)+1);
+	return AnsiToUnicode(src.c_str(), static_cast<int>(src.length() + 1));
 }
 
 std::string UnicodeToAnsi(const wchar_t* src, int len)
@@ -58,8 +58,8 @@ std::string UnicodeToAnsi(const wchar_t* src, int len)
 	return result;
 }
 
-std::string UnicodeToAnsi(const wchar_t* src)
+std::string UnicodeToAnsi(const std::wstring& src)
 {
-	return UnicodeToAnsi(src, wcslen(src) + 1);
+	return UnicodeToAnsi(src.c_str(), static_cast<int>(src.length() + 1));
 }
 }//namespace Ult
