@@ -1,6 +1,5 @@
 #include "StdAfx.h"
 #include ".\ult-net.h"
-#include <Winsock2.h>
 
 namespace ult {
 bool g_is_socket_init = false;
@@ -50,7 +49,8 @@ void Cleanup( void )
 }
 
 
-Udp::Udp( void )
+Udp::Udp( void ) :
+  socket_(NULL)
 {
   InitSocket();
 }
@@ -63,6 +63,13 @@ Udp::~Udp( void )
 void Udp::Close( void )
 {
   closesocket(socket_);
+}
+
+void Udp::SetRecvTimeout(int millisec)
+{
+  if (NULL != socket_) {
+    int ret = setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, (char*)&millisec, sizeof (millisec));
+  }
 }
 
 bool Udp::SendTo( const char* data, int len, const char* host, u_short port )
