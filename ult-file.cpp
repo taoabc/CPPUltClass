@@ -83,4 +83,13 @@ std::wstring GetFileNameWithoutPath( const std::wstring& file_name )
   return name;
 }
 
+std::wstring GetModulePath( void )
+{
+  wchar_t buf[MAX_PATH];
+  GetModuleFileName(NULL, buf, MAX_PATH);
+  std::wstring path(buf);
+  int pos = path.rfind(L"\\");
+  return path.substr(0, pos + 1);
+}
+
 } //namespace Ult

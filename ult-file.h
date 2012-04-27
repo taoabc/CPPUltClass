@@ -15,6 +15,7 @@ namespace ult {
   std::wstring GetFileUpperFolder(const std::wstring& file_name);
 	std::wstring GetMaxFreeSapceDisk(unsigned int* size_in_mb);
 	std::wstring GetAppDataPath(void);
+  std::wstring GetModulePath(void);
 }
 
 #endif // ULT_FILE_H_
