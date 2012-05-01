@@ -13,7 +13,7 @@ namespace ult {
   std::wstring GetFileTitleName(const std::wstring& file_name);
   std::wstring GetFileExtensionName(const std::wstring& file_name);
   std::wstring GetFileUpperFolder(const std::wstring& file_name);
-	std::wstring GetMaxFreeSapceDisk(unsigned int* size_in_mb);
+  std::wstring GetMaxFreeSapceDisk(unsigned int* size_in_mb);
 	std::wstring GetAppDataPath(void);
   std::wstring GetModulePath(void);
 }

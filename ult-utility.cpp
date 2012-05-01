@@ -97,4 +97,28 @@ bool ReadFileToString( const std::wstring& file, std::string* dest )
   return ret;
 }
 
+DWORD GetShellVersion( void )
+{
+  HINSTANCE hinst_dll;
+  DWORD dwversion = 0;
+  hinst_dll = LoadLibrary(L"Shell32.dll");
+  if (NULL != hinst_dll) {
+    DLLGETVERSIONPROC pfn_dll_get_version;
+    pfn_dll_get_version = (DLLGETVERSIONPROC)GetProcAddress(hinst_dll, "DllGetVersion");
+    if (NULL != pfn_dll_get_version) {
+      DLLVERSIONINFO dvi;
+      HRESULT hr;
+
+      memset(&dvi, 0, sizeof(dvi));
+      dvi.cbSize = sizeof(dvi);
+      hr = pfn_dll_get_version(&dvi);
+      if (SUCCEEDED(hr)) {
+        dwversion = MAKELONG(dvi.dwMinorVersion, dvi.dwMajorVersion);
+      }
+    }
+    FreeLibrary(hinst_dll);
+  }
+  return dwversion;
+}
+
 }
