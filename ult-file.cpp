@@ -92,4 +92,26 @@ std::wstring GetModulePath( void )
   return path.substr(0, pos + 1);
 }
 
+bool MakeSureFolderExist( const std::wstring& folder_path )
+{
+  bool ret = false;
+  if (0 == CreateDirectory(folder_path.c_str(), NULL)) {
+    if (ERROR_ALREADY_EXISTS == GetLastError()) {
+      ret = true;
+    }
+  } else {
+    ret = true;
+  }
+  return ret;
+}
+
+bool IsFileExist( const std::wstring& file )
+{
+  if (-1 != _waccess(file.c_str(), 0)) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 } //namespace Ult

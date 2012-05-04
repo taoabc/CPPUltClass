@@ -5,7 +5,7 @@
 #include <io.h>
 
 namespace ult{
-std::wstring GetKeyValue( HKEY parent_key, const std::wstring& key_name, const std::wstring& value_name )
+std::wstring RegQueryString( HKEY parent_key, const std::wstring& key_name, const std::wstring& value_name )
 {
   std::wstring result;
   result.clear();
@@ -57,15 +57,6 @@ void DebugPrint( int n )
 #endif
 }
 
-bool IsFileExist( const std::wstring& file )
-{
-  if (-1 != _waccess(file.c_str(), 0)) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
 bool ReadFileToString( const std::wstring& file, std::string* dest )
 {
   HANDLE hfile = CreateFile(file.c_str(), GENERIC_READ, FILE_SHARE_READ,
@@ -99,10 +90,10 @@ bool ReadFileToString( const std::wstring& file, std::string* dest )
 
 DWORD GetShellVersion( void )
 {
-  HINSTANCE hinst_dll;
+  HMODULE hmodule_dll;
   DWORD dwversion = 0;
-  hinst_dll = LoadLibrary(L"Shell32.dll");
-  if (NULL != hinst_dll) {
+  hmodule_dll = LoadLibrary(L"Shell32.dll");
+  if (NULL != hmodule_dll) {
     DLLGETVERSIONPROC pfn_dll_get_version;
     pfn_dll_get_version = (DLLGETVERSIONPROC)GetProcAddress(hinst_dll, "DllGetVersion");
     if (NULL != pfn_dll_get_version) {
@@ -116,9 +107,33 @@ DWORD GetShellVersion( void )
         dwversion = MAKELONG(dvi.dwMinorVersion, dvi.dwMajorVersion);
       }
     }
-    FreeLibrary(hinst_dll);
+    FreeLibrary(hmodule_dll);
   }
   return dwversion;
+}
+
+bool RegQueryWord( HKEY parent_key, const wchar_t* key_name,
+                  const wchar_t* value_name, DWORD* value )
+{
+  CRegKey regKey;
+  int ret = regKey.Open(parent_key, key_name, KEY_READ);
+  if (ERROR_SUCCESS != ret) {
+    return false;
+  }
+  ret = regKey.QueryDWORDValue(value_name, *value);
+  if (ERROR_SUCCESS != ret) {
+    regKey.Close();
+    return false;
+  }
+  regKey.Close();
+  return true;
+}
+
+std::wstring NumberToString( int num )
+{
+  wchar_t buf[100];
+  swprintf(buf, L"%d", num);
+  return buf;
 }
 
 }

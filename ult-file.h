@@ -16,6 +16,8 @@ namespace ult {
   std::wstring GetMaxFreeSapceDisk(unsigned int* size_in_mb);
 	std::wstring GetAppDataPath(void);
   std::wstring GetModulePath(void);
+  bool IsFileExist(const std::wstring& file);
+  bool MakeSureFolderExist(const std::wstring& folder_path);
 }
 
 #endif // ULT_FILE_H_
