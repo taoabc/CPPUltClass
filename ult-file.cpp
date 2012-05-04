@@ -32,7 +32,9 @@ std::wstring GetMaxFreeSapceDisk( unsigned int* size_in_mb )
 	}
 	delete[] buf;
 
-	*size_in_mb = static_cast<int>(maxfree / 1024 / 1024);
+  if (NULL != size_in_mb) {
+	  *size_in_mb = static_cast<int>(maxfree / 1024 / 1024);
+  }
 	return disk;
 }
 
