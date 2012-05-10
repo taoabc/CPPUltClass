@@ -95,7 +95,7 @@ DWORD GetShellVersion( void )
   hmodule_dll = LoadLibrary(L"Shell32.dll");
   if (NULL != hmodule_dll) {
     DLLGETVERSIONPROC pfn_dll_get_version;
-    pfn_dll_get_version = (DLLGETVERSIONPROC)GetProcAddress(hinst_dll, "DllGetVersion");
+    pfn_dll_get_version = (DLLGETVERSIONPROC)GetProcAddress(hmodule_dll, "DllGetVersion");
     if (NULL != pfn_dll_get_version) {
       DLLVERSIONINFO dvi;
       HRESULT hr;
