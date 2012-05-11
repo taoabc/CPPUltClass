@@ -1,5 +1,5 @@
 #include "StdAfx.h"
-#include "ult-text-encoding.h"
+#include "ult-string.h"
 #include <Windows.h>
 
 namespace ult {
