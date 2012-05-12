@@ -8,6 +8,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 namespace ult {
 	std::wstring Utf8ToUnicode(const char* src, int len);
@@ -18,6 +19,13 @@ namespace ult {
 	std::wstring AnsiToUnicode(const std::string& src);
 	std::string  UnicodeToAnsi(const wchar_t* src, int len);
 	std::string  UnicodeToAnsi(const std::wstring& src);
+  bool         SplitString(const std::wstring& src,
+                           const std::wstring& separator,
+                           std::vector<std::wstring>* vec);
+  int          WcharEq(const wchar_t& c1, const wchar_t& c2);
+  int          WcharLt(const wchar_t& c1, const wchar_t& c2);
+  int          CompareStringNoCase(const std::wstring& comp1,
+                                   const std::wstring& comp2);
 }
 
 #endif // ULT_CONV_H_

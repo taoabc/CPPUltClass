@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "ult-string.h"
 #include <Windows.h>
+#include <cwctype>
 
 namespace ult {
 std::wstring Utf8ToUnicode(const char* src, int len)
@@ -62,4 +63,54 @@ std::string UnicodeToAnsi(const std::wstring& src)
 {
 	return UnicodeToAnsi(src.c_str(), static_cast<int>(src.length() + 1));
 }
+
+bool SplitString( const std::wstring& src, const std::wstring& separator,
+                 std::vector<std::wstring>* vec )
+{
+  if (src.empty() || separator.empty()) {
+    return false;
+  }
+  int pos;
+  std::wstring tmp(src);
+  std::wstring item;
+  int separator_len = separator.length();
+  while (true) {
+    pos = tmp.find(separator);
+    if (0 <= pos) {
+      item = tmp.substr(0, pos);
+      vec->push_back(item);
+      tmp = tmp.substr(pos + separator_len);
+    } else {
+      vec->push_back(tmp);
+      break;
+    }
+  }
+  return true;
+}
+
+int CompareStringNoCase( const std::wstring& comp1, const std::wstring& comp2 )
+{
+  int len1 = comp1.length();
+  int len2 = comp2.length();
+  if (len1 != len2) {
+    return len1 < len2 ? -1 : 1;
+  }
+  for (int i = 0; i < len1; ++i) {
+    if (!WcharEq(comp1.at(i), comp2.at(i))) {
+      return WcharLt(comp1.at(i), comp2.at(i));
+    }
+  }
+  return 0;
+}
+
+int WcharEq( const wchar_t& c1, const wchar_t& c2 )
+{
+  return std::towupper(c1) == std::towupper(c2);
+}
+
+int WcharLt( const wchar_t& c1, const wchar_t& c2 )
+{
+  return std::towupper(c1) < std::towupper(c2);
+}
+
 }//namespace Ult

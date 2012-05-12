@@ -3,17 +3,18 @@
 #include <string>
 #include <Windows.h>
 #include <io.h>
+#include <ctime>
+#include <cstdlib>
 
 namespace ult{
-std::wstring RegQueryString( HKEY parent_key, const std::wstring& key_name, const std::wstring& value_name )
+bool RegQueryString( HKEY parent_key, const std::wstring& key_name,
+                    const std::wstring& value_name, std::wstring* result )
 {
-  std::wstring result;
-  result.clear();
   CRegKey regKey;
   int ret = regKey.Open(parent_key, key_name.c_str(), KEY_READ);
   if (ERROR_SUCCESS != ret) {
     DebugPrint(GetLastError());
-    return result;
+    return false;
   }
   wchar_t buf_value[MAX_PATH];
   unsigned long len = MAX_PATH;
@@ -21,11 +22,11 @@ std::wstring RegQueryString( HKEY parent_key, const std::wstring& key_name, cons
   if (ERROR_SUCCESS != ret) {
     DebugPrint(GetLastError());
     regKey.Close();
-    return result;
+    return false;
   }
   regKey.Close();
-  result.assign(buf_value);
-  return result;
+  result->assign(buf_value);
+  return true;
 }
 
 void DebugPrint( const std::wstring& str )
@@ -134,6 +135,42 @@ std::wstring NumberToString( int num )
   wchar_t buf[100];
   swprintf(buf, L"%d", num);
   return buf;
+}
+
+void DisorderInteger( int begin_number, int end_number, std::vector<int>* vec )
+{
+  if (begin_number > end_number) {
+    SwapInteger(&begin_number, &end_number);
+  }
+  for (int i = begin_number; i <= end_number; ++i) {
+    vec->push_back(i);
+  }
+  
+  int vec_size = vec->size();
+  int r;
+  for (int i = 0; i < vec_size; ++i) {
+    r = GetRandomNumber(0, vec_size - 1);
+    SwapInteger(&(*vec)[i], &(*vec)[r]);
+  }
+}
+
+void SwapInteger( int* x, int* y )
+{
+  if (*x != *y) {
+    *x = *x ^ *y;
+    *y = *x ^ *y;
+    *x = *x ^ *y;
+  }
+}
+
+int GetRandomNumber( int min_number, int max_number )
+{
+  static bool seed = false;
+  if (!seed) {
+    srand((unsigned int)time(NULL));
+    seed = true;
+  }
+  return (double)rand() / RAND_MAX * (max_number - min_number ) + min_number;
 }
 
 }
