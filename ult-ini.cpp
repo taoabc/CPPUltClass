@@ -1,5 +1,5 @@
 #include "StdAfx.h"
-#include "ini.h"
+#include "ult-ini.h"
 #include <cstdio>
 #include <Windows.h>
 
@@ -13,14 +13,14 @@ Ini::~Ini(void)
 {
 }
 
-Ini::Ini(const std::wstring& filename)
+Ini::Ini(const wchar_t* filename) :
+  config_filename_(filename)
 {
-	config_filename_ = filename;
 }
 
-void Ini::AssignFile( const std::wstring& filename )
+void Ini::AssignFile( const wchar_t* filename )
 {
-	config_filename_ = filename;
+	config_filename_.assign(filename);
 }
 
 bool Ini::WriteString(const std::wstring& section,

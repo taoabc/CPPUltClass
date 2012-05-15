@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <windows.h>
 
 namespace ult {
 void DebugPrint(const std::wstring& str);

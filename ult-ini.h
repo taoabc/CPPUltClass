@@ -15,8 +15,8 @@ public:
 	Ini(void);
   ~Ini(void);
 
-	Ini(const std::wstring& filename);
-	void AssignFile(const std::wstring& filename);
+	Ini(const wchar_t* filename);
+	void AssignFile(const wchar_t* filename);
 	bool WriteString(const std::wstring& section, const std::wstring& entry, const std::wstring& str);
 	std::wstring GetString(const std::wstring& section, const std::wstring& entry, const wchar_t* string_default=NULL);
 	bool WriteInt(const std::wstring& section, const std::wstring& entry, int number);

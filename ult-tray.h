@@ -7,6 +7,7 @@
 #define ULT_TRAY_H_
 
 #include <string>
+#include <windows.h>
 
 #ifndef NIIF_USER
 #define NIIF_USER 0x00000004

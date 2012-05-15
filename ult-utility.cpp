@@ -5,6 +5,8 @@
 #include <io.h>
 #include <ctime>
 #include <cstdlib>
+#include <atlbase.h>
+
 
 namespace ult{
 bool RegQueryString( HKEY parent_key, const std::wstring& key_name,
@@ -53,7 +55,7 @@ void DebugPrint( int n )
 {
 #ifdef _DEBUG
   wchar_t num[100];
-  swprintf(num, L"%d", n);
+  swprintf(num, 100, L"%d", n);
   DebugPrint(num);
 #endif
 }
@@ -133,7 +135,7 @@ bool RegQueryWord( HKEY parent_key, const wchar_t* key_name,
 std::wstring NumberToString( int num )
 {
   wchar_t buf[100];
-  swprintf(buf, L"%d", num);
+  swprintf(buf, 100, L"%d", num);
   return buf;
 }
 

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "ult-tray.h"
 #include <ShellAPI.h>
+#include <shlwapi.h>
 
 namespace ult {
 
