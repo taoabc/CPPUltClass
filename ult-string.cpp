@@ -88,16 +88,16 @@ bool SplitString( const std::wstring& src, const std::wstring& separator,
   return true;
 }
 
-int CompareStringNoCase( const std::wstring& comp1, const std::wstring& comp2 )
+int CompareStringNoCase( const wchar_t* comp1, const wchar_t* comp2 )
 {
-  int len1 = comp1.length();
-  int len2 = comp2.length();
+  int len1 = wcslen(comp1);
+  int len2 = wcslen(comp2);
   if (len1 != len2) {
     return len1 < len2 ? -1 : 1;
   }
   for (int i = 0; i < len1; ++i) {
-    if (!WcharEq(comp1.at(i), comp2.at(i))) {
-      return WcharLt(comp1.at(i), comp2.at(i));
+    if (!WcharEq(comp1[i], comp2[i])) {
+      return WcharLt(comp1[i], comp2[i]);
     }
   }
   return 0;

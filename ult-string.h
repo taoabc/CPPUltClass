@@ -24,8 +24,8 @@ namespace ult {
                            std::vector<std::wstring>* vec);
   int          WcharEq(const wchar_t& c1, const wchar_t& c2);
   int          WcharLt(const wchar_t& c1, const wchar_t& c2);
-  int          CompareStringNoCase(const std::wstring& comp1,
-                                   const std::wstring& comp2);
+  int          CompareStringNoCase(const wchar_t* comp1,
+                                   const wchar_t* comp2);
 }
 
 #endif // ULT_CONV_H_
