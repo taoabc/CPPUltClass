@@ -15,7 +15,7 @@ namespace ult {
 
 inline std::wstring Utf8ToUnicode(const char* src, int len) {
   int buf_len = ::MultiByteToWideChar(CP_UTF8, 0, src, len, NULL, 0);
-  wchar_t* buf = new wchar_t [buf_len];
+  wchar_t* buf = new wchar_t[buf_len];
   int out_len = ::MultiByteToWideChar(CP_UTF8, 0, src, len, buf, buf_len);
   std::wstring result(buf, out_len);
   delete[] buf;
@@ -28,7 +28,7 @@ inline std::wstring Utf8ToUnicode(const std::string& src) {
 
 inline std::string UnicodeToUtf8(const wchar_t* src, int len) {
   int buf_len = ::WideCharToMultiByte(CP_UTF8, 0, src, len, NULL, 0, NULL, NULL);
-  char* buf = new char [buf_len];
+  char* buf = new char[buf_len];
   int out_len = ::WideCharToMultiByte(CP_UTF8, 0, src, len, buf, buf_len, NULL, NULL);
   std::string result(buf, out_len);
   delete[] buf;
@@ -41,7 +41,7 @@ inline std::string UnicodeToUtf8(const std::wstring& src) {
 
 inline std::wstring AnsiToUnicode(const char* src, int len) {
   int buf_len = ::MultiByteToWideChar(CP_ACP, 0, src, len, NULL, 0);
-  wchar_t* buf = new wchar_t [buf_len];
+  wchar_t* buf = new wchar_t[buf_len];
   memset(buf, 0, buf_len);
   int out_len = ::MultiByteToWideChar(CP_ACP, 0, src, len, buf, buf_len);
   std::wstring result(buf, out_len);
@@ -55,7 +55,7 @@ inline std::wstring AnsiToUnicode(const std::string& src) {
 
 inline std::string UnicodeToAnsi(const wchar_t* src, int len) {
   int buf_len = ::WideCharToMultiByte(CP_ACP, 0, src, len, NULL, 0, NULL, NULL);
-  char* buf = new char [buf_len];
+  char* buf = new char[buf_len];
   int out_len = ::WideCharToMultiByte(CP_ACP, 0, src, len, buf, buf_len, NULL, NULL);
   std::string result(buf, out_len);
   delete[] buf;
@@ -66,34 +66,46 @@ inline std::string UnicodeToAnsi(const std::wstring& src) {
   return UnicodeToAnsi(src.c_str(), static_cast<int>(src.length()));
 }
 
-inline bool SplitString( const std::wstring& src, const std::wstring& separator,
-    std::vector<std::wstring>* vec ) {
-  if (src.empty() || separator.empty()) {
-    return false;
-  }
-  int pos;
-  std::wstring tmp(src);
-  std::wstring item;
-  int separator_len = separator.length();
-  while (true) {
-    pos = tmp.find(separator);
-    if (0 <= pos) {
-      item = tmp.substr(0, pos);
-      vec->push_back(item);
-      tmp = tmp.substr(pos + separator_len);
-    } else {
-      vec->push_back(tmp);
-      break;
+class StringSpliter {
+
+public:
+
+  static bool Split(const std::wstring& src,
+                    const std::wstring& separator,
+                    std::vector<std::wstring>* vec) {
+    if (src.empty() || separator.empty()) {
+      return false;
     }
+    int pos;
+    std::wstring tmp(src);
+    std::wstring item;
+    int separator_len = separator.length();
+    while (true) {
+      pos = tmp.find(separator);
+      if (0 <= pos) {
+        item = tmp.substr(0, pos);
+        vec->push_back(item);
+        tmp = tmp.substr(pos + separator_len);
+      } else {
+        vec->push_back(tmp);
+        break;
+      }
+    }
+    return true;
   }
-  return true;
+
+};
+
+inline bool SplitString(const std::wstring& src, const std::wstring& separator,
+                        std::vector<std::wstring>* vec ) {
+  return StringSpliter::Split(src, separator, vec);
 }
 
 class StringNoCaseComparer {
 
 public:
 
-  int Compare(const std::wstring& comp1, const std::wstring& comp2) {
+  static int Compare(const std::wstring& comp1, const std::wstring& comp2) {
     int len1 = comp1.length();
     int len2 = comp2.length();
     if (len1 != len2) {
@@ -109,20 +121,19 @@ public:
 
 private:
   
-  bool Eq(const wchar_t& c1, const wchar_t& c2) {
+  static bool Eq(const wchar_t& c1, const wchar_t& c2) {
     return std::towupper(c1) == std::towupper(c2);
   }
 
-  bool Lt(const wchar_t& c1, const wchar_t& c2) {
+  static bool Lt(const wchar_t& c1, const wchar_t& c2) {
     return std::towupper(c1) < std::towupper(c2);
   }
 };
 
 inline int CompareStringNoCase( const std::wstring& comp1, const std::wstring& comp2 ) {
-  StringNoCaseComparer comper;
-  return comper.Compare(comp1, comp2);
+  return StringNoCaseComparer::Compare(comp1, comp2);
 }
 
 }
 
-#endif // ULT_CONV_H_
+#endif // ULT_STRING_H_
