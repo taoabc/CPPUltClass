@@ -134,6 +134,37 @@ inline int CompareStringNoCase( const std::wstring& comp1, const std::wstring& c
   return StringNoCaseComparer::Compare(comp1, comp2);
 }
 
+class StringIntConverter {
+
+public:
+
+  static void UInt64ToString(unsigned __int64 num, wchar_t* s) {
+    wchar_t temp[32];
+    int pos = 0;
+    do {
+      temp[pos++] = (wchar_t)(L'0' + (int)(num % 10));
+      num /= 10;
+    } while (0 != num);
+    do {
+      *s++ = temp[--pos];
+    } while (pos > 0);
+    *s = L'\0';
+  }
+
+};
+
+inline void IntToString(__int64 num, wchar_t* s) {
+  if (num < 0) {
+    *s++ = L'-';
+    num = -num;
+  }
+  StringIntConverter::UInt64ToString(num, s);
+}
+
+inline void UIntToString(unsigned __int64 num, wchar_t* s) {
+  StringIntConverter::UInt64ToString(num, s);
+}
+
 }
 
 #endif // ULT_STRING_H_
