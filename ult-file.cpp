@@ -92,15 +92,35 @@ std::wstring GetModulePath( void )
   return path.substr(0, pos + 1);
 }
 
-bool MakeSureFolderExist( const std::wstring& folder_path )
+std::wstring NormalizeDirPathPrefix(const wchar_t* dirpath) {
+  std::wstring dir(dirpath);
+  if (dir.empty()) {
+    return L"";
+  }
+  if (dir.rfind(L"\\") != dir.length()-1) {
+    dir.append(L"\\");
+  }
+  return dir;
+}
+
+bool MakeSureFolderExist( const wchar_t* folder_path )
 {
+  int index = 0;
   bool ret = false;
-  if (0 == CreateDirectory(folder_path.c_str(), NULL)) {
-    if (ERROR_ALREADY_EXISTS == GetLastError()) {
+  std::wstring normalize_path = NormalizeDirPathPrefix(folder_path);
+  while ((index = normalize_path.find(L'\\', index)) != std::string::npos) {
+    index++;
+    std::wstring path = normalize_path.substr(0, index);
+    if (0 == CreateDirectory(path.c_str(), NULL)) {
+      DWORD lasterr = GetLastError();
+      if (GetLastError() != ERROR_ALREADY_EXISTS) {
+        ret = true;
+      } else {
+        ret = false;
+      }
+    } else {
       ret = true;
     }
-  } else {
-    ret = true;
   }
   return ret;
 }
