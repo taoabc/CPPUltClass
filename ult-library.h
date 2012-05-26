@@ -1,9 +1,10 @@
-#ifndef ULT_DLL_H_
-#define ULT_DLL_H_
+#ifndef ULT_LIBRARY_H_
+#define ULT_LIBRARY_H_
 
 #include <windows.h>
 
 namespace ult {
+namespace library {
 
 class Library {
 
@@ -78,7 +79,10 @@ private:
   HMODULE module_;
 
 };
+} //namespace library
 
-}
+using namespace library;
+
+} //namespace ult
 
 #endif

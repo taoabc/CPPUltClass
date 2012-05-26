@@ -3,8 +3,8 @@
 ** author
 **   taoabc@gmail.com
 */
-#ifndef ULT_STRING_H_
-#define ULT_STRING_H_
+#ifndef ULT_STRING_OPERATE_H_
+#define ULT_STRING_OPERATE_H_
 
 #include <string>
 #include <vector>
@@ -12,6 +12,7 @@
 #include <cwctype>
 
 namespace ult {
+namespace stringoperate {
 
 inline std::wstring MultiByteToUnicode(const char* src, int len, unsigned int codepage) {
   std::wstring dest;
@@ -166,6 +167,10 @@ inline void UIntToString(unsigned __int64 num, wchar_t* s) {
   StringIntConverter::UInt64ToString(num, s);
 }
 
-}
+} //namespace stringoperate
+
+using namespace stringoperate;
+
+} //namespace ult
 
 #endif // ULT_STRING_H_
