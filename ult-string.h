@@ -13,13 +13,30 @@
 
 namespace ult {
 
+inline std::wstring MultiByteToUnicode(const char* src, int len, unsigned int codepage) {
+  std::wstring dest;
+  if (len > 0) {
+    wchar_t* buf = new wchar_t[len];
+    int outlen = ::MultiByteToWideChar(codepage, 0, src, len, buf, len);
+    dest.assign(buf, outlen);
+    delete[] buf;
+  }
+  return dest;
+}
+
+inline std::string UnicodeToMultiByte(const wchar_t* src, int len, unsigned int codepage) {
+  std::string dest;
+  if (len > 0) {
+    char* buf = new char[len*2];
+    int outlen = ::WideCharToMultiByte(codepage, 0, src, len, buf, len*2, NULL, NULL);
+    dest.assign(buf, outlen);
+    delete[] buf;
+  }
+  return dest;
+}
+
 inline std::wstring Utf8ToUnicode(const char* src, int len) {
-  int buf_len = ::MultiByteToWideChar(CP_UTF8, 0, src, len, NULL, 0);
-  wchar_t* buf = new wchar_t[buf_len];
-  int out_len = ::MultiByteToWideChar(CP_UTF8, 0, src, len, buf, buf_len);
-  std::wstring result(buf, out_len);
-  delete[] buf;
-  return result;
+  return MultiByteToUnicode(src, len, CP_UTF8);
 }
 
 inline std::wstring Utf8ToUnicode(const std::string& src) {
@@ -27,12 +44,7 @@ inline std::wstring Utf8ToUnicode(const std::string& src) {
 }
 
 inline std::string UnicodeToUtf8(const wchar_t* src, int len) {
-  int buf_len = ::WideCharToMultiByte(CP_UTF8, 0, src, len, NULL, 0, NULL, NULL);
-  char* buf = new char[buf_len];
-  int out_len = ::WideCharToMultiByte(CP_UTF8, 0, src, len, buf, buf_len, NULL, NULL);
-  std::string result(buf, out_len);
-  delete[] buf;
-  return result;
+  return UnicodeToMultiByte(src, len, CP_UTF8);
 }
 
 inline std::string UnicodeToUtf8(const std::wstring& src) {
@@ -40,13 +52,7 @@ inline std::string UnicodeToUtf8(const std::wstring& src) {
 }
 
 inline std::wstring AnsiToUnicode(const char* src, int len) {
-  int buf_len = ::MultiByteToWideChar(CP_ACP, 0, src, len, NULL, 0);
-  wchar_t* buf = new wchar_t[buf_len];
-  memset(buf, 0, buf_len);
-  int out_len = ::MultiByteToWideChar(CP_ACP, 0, src, len, buf, buf_len);
-  std::wstring result(buf, out_len);
-  delete[] buf;
-  return result;
+  return MultiByteToUnicode(src, len, CP_ACP);
 }
 
 inline std::wstring AnsiToUnicode(const std::string& src) {
@@ -54,12 +60,7 @@ inline std::wstring AnsiToUnicode(const std::string& src) {
 }
 
 inline std::string UnicodeToAnsi(const wchar_t* src, int len) {
-  int buf_len = ::WideCharToMultiByte(CP_ACP, 0, src, len, NULL, 0, NULL, NULL);
-  char* buf = new char[buf_len];
-  int out_len = ::WideCharToMultiByte(CP_ACP, 0, src, len, buf, buf_len, NULL, NULL);
-  std::string result(buf, out_len);
-  delete[] buf;
-  return result;
+  return UnicodeToMultiByte(src, len, CP_ACP);
 }
 
 inline std::string UnicodeToAnsi(const std::wstring& src) {
