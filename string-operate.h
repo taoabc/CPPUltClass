@@ -167,13 +167,12 @@ inline void UIntToString(unsigned __int64 num, wchar_t* s) {
   StringIntConverter::UInt64ToString(num, s);
 }
 
-inline std::string UrlEncode(const char* s) {
+inline std::string UrlEncode(const char* s, size_t len) {
   std::string encoded;
-  std::string s_string(s);
   char* buf = new char[16];
   unsigned char c;
-  for (int i = 0; i < s_string.length(); ++i) {
-    c = s_string.at(i);
+  for (size_t i = 0; i < len; ++i) {
+    c = s[i];
     if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
         (c >= '0' && c <= '9') || c == '.' || c == '-' || c == '_') {
       encoded += c;
@@ -189,6 +188,10 @@ inline std::string UrlEncode(const char* s) {
   }
   delete[] buf;
   return encoded;
+}
+
+inline std::string UrlEncode(const std::string& s) {
+  return UrlEncode(s.c_str(), s.length());
 }
 
 } //namespace stringoperate
