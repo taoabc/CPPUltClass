@@ -2,6 +2,8 @@
 ** 提供字符串操作
 ** author
 **   taoabc@gmail.com
+** 为了方便函数返回字符直接进行操作，字符串操作头文件中的函数大部分通过返回值返回
+** 其它文件为了效率考虑，统一使用返回参数
 */
 #ifndef ULT_STRING_OPERATE_H_
 #define ULT_STRING_OPERATE_H_
@@ -68,103 +70,80 @@ inline std::string UnicodeToAnsi(const std::wstring& src) {
   return UnicodeToAnsi(src.c_str(), static_cast<int>(src.length()));
 }
 
-class StringSpliter {
-
-public:
-
-  static bool Split(const std::wstring& src,
-                    const std::wstring& separator,
-                    std::vector<std::wstring>* vec) {
-    if (src.empty() || separator.empty()) {
-      return false;
-    }
-    int pos;
-    std::wstring tmp(src);
-    std::wstring item;
-    int separator_len = separator.length();
-    while (true) {
-      pos = tmp.find(separator);
-      if (0 <= pos) {
-        item = tmp.substr(0, pos);
-        vec->push_back(item);
-        tmp = tmp.substr(pos + separator_len);
-      } else {
-        vec->push_back(tmp);
-        break;
-      }
-    }
-    return true;
-  }
-
-};
-
 inline bool SplitString(const std::wstring& src, const std::wstring& separator,
                         std::vector<std::wstring>* vec ) {
-  return StringSpliter::Split(src, separator, vec);
+  if (src.empty() || separator.empty()) {
+    return false;
+  }
+  int pos;
+  std::wstring tmp(src);
+  std::wstring item;
+  int separator_len = separator.length();
+  while (true) {
+    pos = tmp.find(separator);
+    if (0 <= pos) {
+      item = tmp.substr(0, pos);
+      vec->push_back(item);
+      tmp = tmp.substr(pos + separator_len);
+    } else {
+      vec->push_back(tmp);
+      break;
+    }
+  }
+  return true;
 }
 
-class StringNoCaseComparer {
-
-public:
-
-  static int Compare(const std::wstring& comp1, const std::wstring& comp2) {
-    int len1 = comp1.length();
-    int len2 = comp2.length();
-    if (len1 != len2) {
-      return len1 < len2 ? -1 : 1;
-    }
-    for (int i = 0; i < len1; ++i) {
-      if (!Eq(comp1.at(i), comp2.at(i))) {
-        return Lt(comp1.at(i), comp2.at(i)) ? -1 : 1;
-      }
-    }
-    return 0;
-  }
-
-private:
-  
-  static bool Eq(const wchar_t& c1, const wchar_t& c2) {
-    return std::towupper(c1) == std::towupper(c2);
-  }
-
-  static bool Lt(const wchar_t& c1, const wchar_t& c2) {
-    return std::towupper(c1) < std::towupper(c2);
-  }
-};
-
-inline int CompareStringNoCase( const std::wstring& comp1, const std::wstring& comp2 ) {
-  return StringNoCaseComparer::Compare(comp1, comp2);
+inline bool EqWchar(const wchar_t& c1, const wchar_t& c2) {
+  return std::towupper(c1) == std::towupper(c2);
 }
 
-class StringIntConverter {
+inline bool LtWchar(const wchar_t& c1, const wchar_t& c2) {
+  return std::towupper(c1) < std::towupper(c2);
+}
 
-public:
-
-  static void UInt64ToString(unsigned __int64 num, wchar_t* s) {
-    wchar_t temp[32];
-    int pos = 0;
-    do {
-      temp[pos++] = (wchar_t)(L'0' + (int)(num % 10));
-      num /= 10;
-    } while (0 != num);
-    do {
-      *s++ = temp[--pos];
-    } while (pos > 0);
-    *s = L'\0';
+inline int CompareStringNoCase(const std::wstring& comp1,
+                               const std::wstring& comp2) {
+  int len1 = comp1.length();
+  int len2 = comp2.length();
+  if (len1 != len2) {
+    return len1 < len2 ? -1 : 1;
   }
+  for (int i = 0; i < len1; ++i) {
+    if (!EqWchar(comp1.at(i), comp2.at(i))) {
+      return LtWchar(comp1.at(i), comp2.at(i)) ? -1 : 1;
+    }
+  }
+  return 0;
+}
 
-};
+inline std::wstring UInt64ToString(unsigned __int64 num) {
+  wchar_t temp[32];
+  wchar_t buf[33];
+  int pos = 0;
+  int i = 0;
+  do {
+    temp[pos++] = (wchar_t)(L'0' + (int)(num % 10));
+    num /= 10;
+  } while (0 != num);
+  do {
+    buf[i++] = temp[--pos];
+  } while (pos > 0);
+  buf[i] = L'\0';
+  return buf;
+}
 
-inline void IntToString(__int64 num, wchar_t* s) {
+inline std::wstring IntToString(__int64 num) {
+  std::wstring result;
   if (num < 0) {
-    *s++ = L'-';
+    result[0] = L'-';
     num = -num;
   }
-  StringIntConverter::UInt64ToString(num, s);
+  result.append(UInt64ToString(num));
+  return result;
 }
 
-inline void UIntToString(unsigned __int64 num, wchar_t* s) {
-  StringIntConverter::UInt64ToString(num, s);
+inline std::wstring UIntToString(unsigned __int64 num) {
+  return UInt64ToString(num);
 }
 
 inline std::string UrlEncode(const char* s, size_t len) {
@@ -182,7 +161,7 @@ inline std::string UrlEncode(const char* s, size_t len) {
       encoded += '+';
       continue;
     }
-    sprintf(buf, "%x", c);
+    sprintf_s(buf, 16, "%x", c);
     encoded += '%';
     encoded += buf;
   }

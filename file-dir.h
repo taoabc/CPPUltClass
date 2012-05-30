@@ -13,37 +13,35 @@
 namespace ult {
 namespace filedir {
 
-void SplitToPureNameAnddExtension(const wchar_t* fullname,
-                                  std::wstring* purename,
-                                  std::wstring* extension) {
-  std::wstring fullname_string(fullname);
-  int pos = fullname_string.rfind(L".");
+inline void SplitToPureNameAnddExtension(const std::wstring& fullname,
+                                         std::wstring* purename,
+                                         std::wstring* extension) {
+  int pos = fullname.rfind(L".");
   if (pos == std::wstring::npos) {
-    purename->assign(fullname_string);
+    purename->assign(fullname);
     extension->clear();
   } else {
-    purename->assign(fullname_string.substr(0, pos));
-    extension->assign(fullname_string.substr(pos+1));
+    purename->assign(fullname.substr(0, pos));
+    extension->assign(fullname.substr(pos+1));
   }
 }
 
-void SplitToPathPrefixAndFileName(const wchar_t* fullpath,
-                                  const wchar_t* pathseparator,
-                                  std::wstring* pathprefix,
-                                  std::wstring* filename) {
-  std::wstring fullpath_string(fullpath);
-  int separator_len = wcslen(pathseparator);
-  int pos = fullpath_string.rfind(pathseparator);
+inline void SplitToPathPrefixAndFileName(const std::wstring& fullpath,
+                                         const std::wstring& pathseparator,
+                                         std::wstring* pathprefix,
+                                         std::wstring* filename) {
+  int separator_len = pathseparator.length();
+  int pos = fullpath.rfind(pathseparator);
   if (pos == std::wstring::npos) {
     pathprefix->clear();
-    filename->assign(fullpath_string);
+    filename->assign(fullpath);
   } else {
-    pathprefix->assign(fullpath_string.substr(0, pos+separator_len));
-    filename->assign(fullpath_string.substr(pos+separator_len));
+    pathprefix->assign(fullpath.substr(0, pos+separator_len));
+    filename->assign(fullpath.substr(pos+separator_len));
   }
 }
 
-void NormalizeDirPathPrefix(std::wstring* dirpath) {
+inline void NormalizeDirPathPrefix(std::wstring* dirpath) {
   if (dirpath->empty()) {
     return;
   }
@@ -52,8 +50,8 @@ void NormalizeDirPathPrefix(std::wstring* dirpath) {
   }
 }
 
-void GetMaxFreeSpaceDrive(std::wstring* drive,
-                          unsigned __int64* freesize) {
+inline void GetMaxFreeSpaceDrive(std::wstring* drive,
+                                 unsigned __int64* freesize) {
   DWORD buf_len = ::GetLogicalDriveStrings(0, NULL);
   wchar_t* buf = new wchar_t [buf_len];
 
@@ -80,15 +78,50 @@ void GetMaxFreeSpaceDrive(std::wstring* drive,
   *freesize = maxfree;
 }
 
-void GetAppDataDirectory(std::wstring* directory) {
+inline void GetAppDataDirectory(std::wstring* directory) {
   wchar_t buf[MAX_PATH];
   ::SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, buf);
   directory->assign(buf);
-  delete[] buf;
 }
-  std::wstring GetModulePath(void);
-  bool IsFileExist(const std::wstring& file);
-  bool MakeSureFolderExist(const std::wstring& folder_path);
+
+inline bool IsPathFileExist(const std::wstring& pathfile) {
+  if (-1 != _waccess(pathfile.c_str(), 0)) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+inline void GetSelfModulePath(std::wstring* path) {
+  wchar_t buf[MAX_PATH];
+  ::GetModuleFileName(NULL, buf, MAX_PATH);
+  std::wstring tmp(buf);
+  int pos = tmp.rfind(L"\\");
+  path->assign(tmp.substr(0, pos + 1));
+}
+
+inline bool MakeSureFolderExist(const std::wstring& folder_path) {
+  int index = 0;
+  bool ret = false;
+  std::wstring normalize_path(folder_path);
+  NormalizeDirPathPrefix(&normalize_path);
+  while ((index = normalize_path.find(L'\\', index)) != std::string::npos) {
+    index++;
+    std::wstring path = normalize_path.substr(0, index);
+    if (0 == CreateDirectory(path.c_str(), NULL)) {
+      DWORD lasterr = GetLastError();
+      if (GetLastError() != ERROR_ALREADY_EXISTS) {
+        ret = true;
+      } else {
+        ret = false;
+      }
+    } else {
+      ret = true;
+    }
+  }
+  return ret;
+}
+
 } //namespace filedir
 
 using namespace filedir;
