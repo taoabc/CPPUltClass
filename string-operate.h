@@ -70,7 +70,8 @@ inline std::string UnicodeToAnsi(const std::wstring& src) {
   return UnicodeToAnsi(src.c_str(), static_cast<int>(src.length()));
 }
 
-inline bool SplitString(const std::wstring& src, const std::wstring& separator,
+inline bool SplitString(const std::wstring& src,
+                        const std::wstring& separator,
                         std::vector<std::wstring>* vec ) {
   if (src.empty() || separator.empty()) {
     return false;
