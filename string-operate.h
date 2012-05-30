@@ -118,7 +118,7 @@ inline int CompareStringNoCase(const std::wstring& comp1,
 
 inline std::wstring UInt64ToString(unsigned __int64 num) {
   wchar_t temp[32];
-  wchar_t buf[33];
+  std::wstring result;
   int pos = 0;
   int i = 0;
   do {
@@ -126,16 +126,15 @@ inline std::wstring UInt64ToString(unsigned __int64 num) {
     num /= 10;
   } while (0 != num);
   do {
-    buf[i++] = temp[--pos];
+    result += temp[--pos];
   } while (pos > 0);
-  buf[i] = L'\0';
-  return buf;
+  return result;
 }
 
 inline std::wstring IntToString(__int64 num) {
   std::wstring result;
   if (num < 0) {
-    result[0] = L'-';
+    result += L'-';
     num = -num;
   }
   result.append(UInt64ToString(num));
