@@ -70,6 +70,22 @@ inline std::string UnicodeToAnsi(const std::wstring& src) {
   return UnicodeToAnsi(src.c_str(), static_cast<int>(src.length()));
 }
 
+inline std::string AnsiToUtf8(const char* src, int len) {
+  return UnicodeToUtf8(AnsiToUnicode(src, len));
+}
+
+inline std::string AnsiToUtf8(const std::string& src) {
+  return UnicodeToUtf8(AnsiToUnicode(src));
+}
+
+inline std::string Utf8ToAnsi(const char* src, int len) {
+  return UnicodeToAnsi(Utf8ToUnicode(src, len));
+}
+
+inline std::string Utf8ToAnsi(const std::string& src) {
+  return UnicodeToAnsi(Utf8ToUnicode(src));
+}
+
 inline bool SplitString(const std::wstring& src,
                         const std::wstring& separator,
                         std::vector<std::wstring>* vec ) {
@@ -146,11 +162,11 @@ inline std::wstring UIntToString(unsigned __int64 num) {
   return UInt64ToString(num);
 }
 
-inline std::string UrlEncode(const char* s, size_t len) {
+inline std::string UrlEncode(const char* s, int len) {
   std::string encoded;
   char* buf = new char[16];
   unsigned char c;
-  for (size_t i = 0; i < len; ++i) {
+  for (int i = 0; i < len; ++i) {
     c = s[i];
     if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
         (c >= '0' && c <= '9') || c == '.' || c == '-' || c == '_') {
@@ -171,6 +187,14 @@ inline std::string UrlEncode(const char* s, size_t len) {
 
 inline std::string UrlEncode(const std::string& s) {
   return UrlEncode(s.c_str(), s.length());
+}
+
+inline std::string UrlEncode(const wchar_t* s, int len) {
+  return UrlEncode(UnicodeToAnsi(s, len));
+}
+
+inline std::string UrlEncode(const std::wstring& s) {
+  return UrlEncode(UnicodeToAnsi(s));
 }
 
 } //namespace stringoperate
