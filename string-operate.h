@@ -30,8 +30,8 @@ inline std::wstring MultiByteToUnicode(const char* src, int len, unsigned int co
 inline std::string UnicodeToMultiByte(const wchar_t* src, int len, unsigned int codepage) {
   std::string dest;
   if (len > 0) {
-    char* buf = new char[len*2];
-    int outlen = ::WideCharToMultiByte(codepage, 0, src, len, buf, len*2, NULL, NULL);
+    char* buf = new char[len*3];
+    int outlen = ::WideCharToMultiByte(codepage, 0, src, len, buf, len*3, NULL, NULL);
     dest.assign(buf, outlen);
     delete[] buf;
   }
@@ -169,7 +169,8 @@ inline std::string UrlEncode(const char* s, int len) {
   for (int i = 0; i < len; ++i) {
     c = s[i];
     if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
-        (c >= '0' && c <= '9') || c == '.' || c == '-' || c == '_') {
+        (c >= '0' && c <= '9') || c == '.' || c == '-' || c == '_' ||
+        c == '!' || c == '~' || c == '*' || c == '\'' || c == '(' || c == ')') {
       encoded += c;
       continue;
     }

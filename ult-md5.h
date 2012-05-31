@@ -46,8 +46,6 @@ inline std::string MD5File( const std::wstring& file_name )
 
   md5_init(&state);
 
-  int ret;
-
   DWORD dwread;
   while (0 != ReadFile(hfile, buffer, kBufferSize, &dwread, NULL) && 0 < dwread) {
     md5_append(&state, (const md5_byte_t*)buffer, dwread);
