@@ -21,12 +21,11 @@ inline void HttpRequest(const std::wstring& url, std::string* content) {
   hopen = InternetOpen(NULL, INTERNET_OPEN_TYPE_PRECONFIG,
       NULL, NULL, 0);
   if (hopen != NULL) {
-    wchar_t* canonical_url = NULL;
     DWORD len = 1;
     wchar_t tmp[1];
     //almost every time, this function will fail and we get the length we need
     InternetCanonicalizeUrl(url.c_str(), tmp, &len, ICU_BROWSER_MODE);
-    canonical_url = new wchar_t[len];
+    wchar_t* canonical_url = new wchar_t[len];
     InternetCanonicalizeUrl(url.c_str(), canonical_url, &len, ICU_BROWSER_MODE);
     hopenurl = InternetOpenUrl(hopen, canonical_url, NULL, 0,
         INTERNET_FLAG_NO_UI | INTERNET_FLAG_PRAGMA_NOCACHE, 0);
