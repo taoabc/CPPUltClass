@@ -11,6 +11,7 @@
 #include <Windows.h>
 
 namespace ult {
+namespace ini {
 
 class Ini {
 
@@ -68,6 +69,10 @@ private:
   };
 	std::wstring config_filename_;
 };
+
+}
+
+using namespace ini;
 
 } //namespace ult
 

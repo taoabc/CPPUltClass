@@ -27,7 +27,7 @@ inline std::string MD5String( const std::string& str )
   md5_append(&state, (const md5_byte_t*)str.c_str(), str.length());
   md5_finish(&state, digest);
   for (int di = 0; di < 16; ++di) {
-    sprintf(hex_output + di * 2, "%02x", digest[di]);
+    sprintf_s(hex_output + di * 2, 3, "%02x", digest[di]);
   }
   return hex_output;
 }
@@ -53,7 +53,7 @@ inline std::string MD5File( const std::wstring& file_name )
   CloseHandle(hfile);
   md5_finish(&state, digest);
   for (int di = 0; di < 16; ++di) {
-    sprintf(hex_output + di * 2, "%02x", digest[di]);
+    sprintf_s(hex_output + di * 2, 3, "%02x", digest[di]);
   }
   return hex_output;
 }

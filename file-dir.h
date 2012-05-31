@@ -41,7 +41,7 @@ inline void SplitToPathPrefixAndFileName(const std::wstring& fullpath,
   }
 }
 
-inline void NormalizeDirPathPrefix(std::wstring* dirpath) {
+inline void CanonicalizeDirPathPrefix(std::wstring* dirpath) {
   if (dirpath->empty()) {
     return;
   }
@@ -104,7 +104,7 @@ inline bool MakeSureFolderExist(const std::wstring& folder_path) {
   int index = 0;
   bool ret = false;
   std::wstring normalize_path(folder_path);
-  NormalizeDirPathPrefix(&normalize_path);
+  CanonicalizeDirPathPrefix(&normalize_path);
   while ((index = normalize_path.find(L'\\', index)) != std::string::npos) {
     index++;
     std::wstring path = normalize_path.substr(0, index);
