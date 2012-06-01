@@ -109,7 +109,6 @@ inline bool MakeSureFolderExist(const std::wstring& folder_path) {
     index++;
     std::wstring path = normalize_path.substr(0, index);
     if (0 == CreateDirectory(path.c_str(), NULL)) {
-      DWORD lasterr = GetLastError();
       if (GetLastError() != ERROR_ALREADY_EXISTS) {
         ret = true;
       } else {

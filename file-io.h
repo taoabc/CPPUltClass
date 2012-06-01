@@ -69,6 +69,38 @@ bool OpenOperation(const std::wstring& filename, DWORD dwaccess) {
   return true;
 }
 
+bool Create(const std::wstring& filename, bool create_always) {
+
+}
+
+unsigned __int64 GetPosition(void) {
+
+}
+
+unsigned __int64 GetLength(void) {
+
+}
+
+bool Seek(unsigned __int64 position, unsigned __int64 new_position) {
+
+}
+
+bool SeekToBegin(void) {
+
+}
+
+bool SeekToEnd(unsigned __int64* new_position) {
+
+}
+
+bool Read() {
+
+}
+
+bool Write() {
+
+}
+
 private:
 
   HANDLE hfile_;

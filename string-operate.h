@@ -137,7 +137,6 @@ inline std::wstring UInt64ToString(unsigned __int64 num) {
   wchar_t temp[32];
   std::wstring result;
   int pos = 0;
-  int i = 0;
   do {
     temp[pos++] = (wchar_t)(L'0' + (int)(num % 10));
     num /= 10;
