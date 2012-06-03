@@ -98,10 +98,14 @@ inline bool SplitString(const std::wstring& src,
   int separator_len = separator.length();
   while ((pos = tmp.find(separator)) >= 0) {
     item = tmp.substr(0, pos);
-    vec->push_back(item);
+    if (!item.empty()) {
+      vec->push_back(item);
+    }
     tmp = tmp.substr(pos + separator_len);
   }
-  vec->push_back(tmp);
+  if (!tmp.empty()) {
+    vec->push_back(tmp);
+  }
   return true;
 }
 
