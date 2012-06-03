@@ -7,7 +7,6 @@
 #define ULT_FILE_PE_H_
 
 #include "file-io.h"
-#include <string>
 
 namespace ult{
 namespace filepe {
