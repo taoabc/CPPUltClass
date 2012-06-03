@@ -17,14 +17,6 @@ class FileInfo {
   
 public:
 
-  
-  bool IsPEFile(void) {
-    if (hfile_ == NULL) {
-      return false;
-    }
-
-  }
-
 private:
 
   HANDLE hfile_;

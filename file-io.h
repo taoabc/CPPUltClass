@@ -16,156 +16,156 @@ class File {
 
 public:
 
-File(void) : hfile_(NULL) {
+  File(void) : hfile_(NULL) {
 
-}
-
-~File(void) {
-  if (hfile_ != NULL) {
-    Close();
   }
-}
 
-bool IsOpened(void) {
-  return hfile_ != NULL;
-}
+  ~File(void) {
+    if (hfile_ != NULL) {
+      Close();
+    }
+  }
 
-void Attach(HANDLE hfile) {
-  Close();
-  hfile_ = hfile;
-}
+  bool IsOpened(void) {
+    return hfile_ != NULL;
+  }
 
-HANDLE Detach(void) {
-  HANDLE f = hfile_;
-  hfile_ = NULL;
-  return f;
-}
+  void Attach(HANDLE hfile) {
+    Close();
+    hfile_ = hfile;
+  }
 
-bool Close(void) {
-  if (hfile_ == NULL) {
+  HANDLE Detach(void) {
+    HANDLE f = hfile_;
+    hfile_ = NULL;
+    return f;
+  }
+
+  bool Close(void) {
+    if (hfile_ == NULL) {
+      return true;
+    }
+    if (!::CloseHandle(hfile_)) {
+      return false;
+    }
+    hfile_ = NULL;
     return true;
   }
-  if (!::CloseHandle(hfile_)) {
-    return false;
+
+  bool Open(const std::wstring& filename) {
+    return OpenOperation(filename, GENERIC_READ);
   }
-  hfile_ = NULL;
-  return true;
-}
 
-bool Open(const std::wstring& filename) {
-  return OpenOperation(filename, GENERIC_READ);
-}
-
-bool Open(const std::wstring& filename, DWORD dwaccess) {
-  return OpenOperation(filename, dwaccess);
-}
-
-bool OpenOperation(const std::wstring& filename, DWORD dwaccess) {
-  hfile_ = ::CreateFile(filename.c_str(), dwaccess, FILE_SHARE_READ, NULL,
-    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-  if (hfile_ == INVALID_HANDLE_VALUE) {
-    return false;
+  bool Open(const std::wstring& filename, DWORD dwaccess) {
+    return OpenOperation(filename, dwaccess);
   }
-  return true;
-}
 
-bool Create(const std::wstring& filename, bool create_always) {
-  DWORD create_disposition;
-  if (create_always) {
-    create_disposition = CREATE_ALWAYS;
-  } else {
-    create_disposition = CREATE_NEW;
+  bool OpenOperation(const std::wstring& filename, DWORD dwaccess) {
+    hfile_ = ::CreateFile(filename.c_str(), dwaccess, FILE_SHARE_READ, NULL,
+      OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hfile_ == INVALID_HANDLE_VALUE) {
+      return false;
+    }
+    return true;
   }
-  hfile_ = ::CreateFile(filename.c_str(), GENERIC_READ | GENERIC_WRITE,
+
+  bool Create(const std::wstring& filename, bool create_always) {
+    DWORD create_disposition;
+    if (create_always) {
+      create_disposition = CREATE_ALWAYS;
+    } else {
+      create_disposition = CREATE_NEW;
+    }
+    hfile_ = ::CreateFile(filename.c_str(), GENERIC_READ | GENERIC_WRITE,
       FILE_SHARE_READ, NULL, create_disposition, FILE_ATTRIBUTE_NORMAL, NULL);
-  if (hfile_ == INVALID_HANDLE_VALUE) {
-    return false;
-  }
-  return true;
-}
-
-unsigned __int64 GetPosition(void) {
-  unsigned __int64 cur_position;
-  if (!Seek(0, &cur_position, FILE_CURRENT)) {
-    return 0;
-  }
-  return cur_position;
-}
-
-unsigned __int64 GetSize(void) {
-  DWORD size_high;
-  DWORD size_low = ::GetFileSize(hfile_, &size_high);
-  unsigned __int64 size;
-  if (size_low == INVALID_FILE_SIZE && GetLastError != NO_ERROR) {
-    return 0;
-  }
-  return (((unsigned __int64)size_high) << 32) + size_low;
-}
-
-bool Seek(__int64 distance, __int64* new_position, DWORD move_method) {
-  LARGE_INTEGER li;
-  li.QuadPart = distance;
-  li.LowPart = ::SetFilePointer(hfile_, li.LowPart, &li.HighPart, move_method);
-  if (li.LowPart == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR) {
-    *new_position = -1;
-    return false;
-  }
-  *new_position = li.QuadPart;
-  return true;
-}
-
-bool Seek(unsigned __int64 distance, unsigned __int64* new_position, DWORD move_method) {
-  return Seek((__int64)distance, (__int64*)new_position, move_method);
-}
-
-bool Seek(unsigned __int64 position, unsigned __int64* new_position) {
-  return Seek(position, new_position, FILE_BEGIN);
-}
-
-bool SeekToBegin(void) {
-  unsigned __int64 new_position;
-  return Seek(0, &new_position);
-}
-
-bool SeekToEnd(unsigned __int64* new_position) {
-  return Seek(0, new_position, FILE_END);
-}
-
-bool Read(void* buffer, DWORD toread, DWORD* readed) {
-  *readed = 0;
-  unsigned long readed_once = 0;
-  do {
-    bool ret = ReadPart(buffer, toread, &readed_once);
-    *readed += readed_once;
-    if (!ret) {
+    if (hfile_ == INVALID_HANDLE_VALUE) {
       return false;
     }
-    if (readed_once == 0) {
-      return true;
-    }
-    buffer = (void*)((unsigned char*)buffer + readed_once);
-    toread -= readed_once;
-  } while (toread > 0);
-  return true;
-}
+    return true;
+  }
 
-bool Write(const void* buffer, DWORD towrite, DWORD* writed) {
-  *writed = 0;
-  unsigned long writed_once = 0;
-  do {
-    bool ret = WritePart(buffer, towrite, &writed_once);
-    *writed += writed_once;
-    if (!ret) {
+  unsigned __int64 GetPosition(void) {
+    unsigned __int64 cur_position;
+    if (!Seek(0, &cur_position, FILE_CURRENT)) {
+      return 0;
+    }
+    return cur_position;
+  }
+
+  unsigned __int64 GetSize(void) {
+    DWORD size_high;
+    DWORD size_low = ::GetFileSize(hfile_, &size_high);
+    unsigned __int64 size;
+    if (size_low == INVALID_FILE_SIZE && GetLastError != NO_ERROR) {
+      return 0;
+    }
+    return (((unsigned __int64)size_high) << 32) + size_low;
+  }
+
+  bool Seek(__int64 distance, __int64* new_position, DWORD move_method) {
+    LARGE_INTEGER li;
+    li.QuadPart = distance;
+    li.LowPart = ::SetFilePointer(hfile_, li.LowPart, &li.HighPart, move_method);
+    if (li.LowPart == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR) {
+      *new_position = -1;
       return false;
     }
-    if (writed_once == 0) {
-      return true;
-    }
-    buffer = (const void*)((const unsigned char*)buffer + writed_once);
-    towrite -= writed_once;
-  } while (towrite > 0);
-  return true;
-}
+    *new_position = li.QuadPart;
+    return true;
+  }
+
+  bool Seek(unsigned __int64 distance, unsigned __int64* new_position, DWORD move_method) {
+    return Seek((__int64)distance, (__int64*)new_position, move_method);
+  }
+
+  bool Seek(unsigned __int64 position, unsigned __int64* new_position) {
+    return Seek(position, new_position, FILE_BEGIN);
+  }
+
+  bool SeekToBegin(void) {
+    unsigned __int64 new_position;
+    return Seek(0, &new_position);
+  }
+
+  bool SeekToEnd(unsigned __int64* new_position) {
+    return Seek(0, new_position, FILE_END);
+  }
+
+  bool Read(void* buffer, DWORD toread, DWORD* readed) {
+    *readed = 0;
+    unsigned long readed_once = 0;
+    do {
+      bool ret = ReadPart(buffer, toread, &readed_once);
+      *readed += readed_once;
+      if (!ret) {
+        return false;
+      }
+      if (readed_once == 0) {
+        return true;
+      }
+      buffer = (void*)((unsigned char*)buffer + readed_once);
+      toread -= readed_once;
+    } while (toread > 0);
+    return true;
+  }
+
+  bool Write(const void* buffer, DWORD towrite, DWORD* writed) {
+    *writed = 0;
+    unsigned long writed_once = 0;
+    do {
+      bool ret = WritePart(buffer, towrite, &writed_once);
+      *writed += writed_once;
+      if (!ret) {
+        return false;
+      }
+      if (writed_once == 0) {
+        return true;
+      }
+      buffer = (const void*)((const unsigned char*)buffer + writed_once);
+      towrite -= writed_once;
+    } while (towrite > 0);
+    return true;
+  }
 
 private:
 
