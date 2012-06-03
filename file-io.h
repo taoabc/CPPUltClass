@@ -95,7 +95,6 @@ public:
   unsigned __int64 GetSize(void) {
     DWORD size_high;
     DWORD size_low = ::GetFileSize(hfile_, &size_high);
-    unsigned __int64 size;
     if (size_low == INVALID_FILE_SIZE && GetLastError != NO_ERROR) {
       return 0;
     }

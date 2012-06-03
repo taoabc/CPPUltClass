@@ -96,17 +96,12 @@ inline bool SplitString(const std::wstring& src,
   std::wstring tmp(src);
   std::wstring item;
   int separator_len = separator.length();
-  while (true) {
-    pos = tmp.find(separator);
-    if (0 <= pos) {
-      item = tmp.substr(0, pos);
-      vec->push_back(item);
-      tmp = tmp.substr(pos + separator_len);
-    } else {
-      vec->push_back(tmp);
-      break;
-    }
+  while ((pos = tmp.find(separator)) >= 0) {
+    item = tmp.substr(0, pos);
+    vec->push_back(item);
+    tmp = tmp.substr(pos + separator_len);
   }
+  vec->push_back(tmp);
   return true;
 }
 

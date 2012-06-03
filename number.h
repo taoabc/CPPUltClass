@@ -29,7 +29,7 @@ inline int GetRandomInteger(int min_number, int max_number) {
   if (min_number > max_number) {
     SwapInteger(&min_number, &max_number);
   }
-  return (double)rand() / RAND_MAX * (max_number - min_number) + min_number;
+  return (int)((double)rand() / RAND_MAX * (max_number - min_number) + min_number);
 }
 
 inline void DisorderInteger(int begin_number, int end_number, std::vector<int>* vec) {
