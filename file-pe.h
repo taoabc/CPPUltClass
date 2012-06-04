@@ -43,6 +43,10 @@ public:
     file_.SeekToBegin();
     return true;
   }
+  
+  bool Close(void) {
+    return file_.Close();
+  }
 
   bool IsValidPE(void) {
     if (dos_header_.e_magic != IMAGE_DOS_SIGNATURE ||
