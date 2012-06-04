@@ -92,12 +92,23 @@ inline bool IsPathFileExist(const std::wstring& pathfile) {
   }
 }
 
+inline bool GetUpperPath(const std::wstring& path, std::wstring* upper_path) {
+  upper_path->clear();
+  int pos = path.rfind(L'\\');
+  if (pos == std::wstring::npos) {
+    return false;
+  }
+  if (pos == (path.length()-1)) {
+    return GetUpperPath(std::wstring(path.c_str(), path.length()-1), upper_path);
+  }
+  upper_path->assign(path.c_str(), pos+1);
+  return true;
+}
+
 inline void GetSelfModulePath(std::wstring* path) {
   wchar_t buf[MAX_PATH];
   ::GetModuleFileName(NULL, buf, MAX_PATH);
-  std::wstring tmp(buf);
-  int pos = tmp.rfind(L"\\");
-  path->assign(tmp.substr(0, pos + 1));
+  GetUpperPath(buf, path);
 }
 
 inline bool MakeSureFolderExist(const std::wstring& folder_path) {
