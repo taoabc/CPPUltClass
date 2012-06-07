@@ -78,9 +78,15 @@ inline void GetMaxFreeSpaceDrive(std::wstring* drive,
   *freesize = maxfree;
 }
 
+inline void GetProgramFilesDirectory(std::wstring* directory) {
+  wchar_t buf[MAX_PATH];
+  ::SHGetFolderPath(NULL, CSIDL_PROGRAM_FILES | CSIDL_FLAG_CREATE, NULL, SHGFP_TYPE_CURRENT, buf);
+  directory->assign(buf);
+}
+
 inline void GetAppDataDirectory(std::wstring* directory) {
   wchar_t buf[MAX_PATH];
-  ::SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, buf);
+  ::SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE, NULL, SHGFP_TYPE_CURRENT, buf);
   directory->assign(buf);
 }
 
