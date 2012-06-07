@@ -101,6 +101,21 @@ public:
     return (((unsigned __int64)size_high) << 32) + size_low;
   }
 
+  bool SetEndOfFile(void) {
+    return (::SetEndOfFile(hfile_) != 0);
+  }
+
+  bool SetSize(unsigned __int64 size) {
+    unsigned __int64 new_position;
+    if (!Seek(size, &new_position)) {
+      return false;
+    }
+    if (new_position != size) {
+      return false;
+    }
+    return SetEndOfFile();
+  }
+
   bool Seek(__int64 distance, __int64* new_position, DWORD move_method) {
     LARGE_INTEGER li;
     li.QuadPart = distance;
@@ -166,8 +181,6 @@ public:
     return true;
   }
 
-private:
-
   bool ReadPart(void* buffer, DWORD toread, DWORD* readed) {
     if (toread > kChunkSizeMax_) {
       toread = kChunkSizeMax_;
@@ -187,6 +200,8 @@ private:
     *writed = writed_once;
     return ret;
   }
+
+private:
 
   HANDLE hfile_;
 
