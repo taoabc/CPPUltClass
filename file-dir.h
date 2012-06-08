@@ -148,6 +148,10 @@ inline bool DeleteFileAlways(const std::wstring& filename) {
   return true;
 }
 
+inline bool SetFileAttributes(const std::wstring& filename, DWORD file_attributes) {
+  return (::SetFileAttributes(filename.c_str(), file_attributes) != 0);
+}
+
 } //namespace filedir
 
 using namespace filedir;
