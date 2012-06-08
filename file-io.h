@@ -120,6 +120,12 @@ public:
     return SetEndOfFile();
   }
 
+  bool SetFileTime(const FILETIME* creation_time,
+                   const FILETIME* lastaccess_time,
+                   const FILETIME* lastwrite_time) {
+    return (::SetFileTime(hfile_, creation_time, lastaccess_time, lastwrite_time) != 0);
+  }
+
   bool Seek(__int64 distance, __int64* new_position, DWORD move_method) {
     LARGE_INTEGER li;
     li.QuadPart = distance;
