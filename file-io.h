@@ -26,6 +26,10 @@ public:
     }
   }
 
+  HANDLE GetHandle(void) {
+    return hfile_;
+  }
+
   bool IsOpened(void) {
     return hfile_ != NULL;
   }
