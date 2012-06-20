@@ -9,6 +9,7 @@
 #include <string>
 #include <windows.h>
 #include <shlobj.h>
+#include <shellapi.h>
 
 namespace ult {
 namespace filedir {
@@ -157,6 +158,22 @@ inline bool DeleteFileAlways(const std::wstring& filename) {
 
 inline bool SetFileAttributes(const std::wstring& filename, DWORD file_attributes) {
   return (::SetFileAttributes(filename.c_str(), file_attributes) != 0);
+}
+
+inline bool RecursiveRemoveDirectory(const std::wstring& directory) {
+  //pFrom and pTo need double-null terminate
+  wchar_t tmp[MAX_PATH+1];
+  memset(tmp, 0, sizeof (tmp));
+  wcscpy(tmp, directory.c_str());
+  SHFILEOPSTRUCT fileop;
+  fileop.hwnd = NULL;
+  fileop.wFunc = FO_DELETE;
+  fileop.pFrom = tmp;
+  fileop.pTo = NULL;
+  fileop.fFlags = FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT;
+  fileop.lpszProgressTitle = NULL;
+
+  return (::SHFileOperation(&fileop) == 0);
 }
 
 } //namespace filedir
