@@ -12,6 +12,7 @@
 #include <vector>
 #include <Windows.h>
 #include <cwctype>
+#include <ctime>
 
 namespace ult {
 namespace stringoperate {
@@ -194,6 +195,28 @@ inline std::string UrlEncode(const wchar_t* s, int len) {
 
 inline std::string UrlEncode(const std::wstring& s) {
   return UrlEncode(UnicodeToAnsi(s));
+}
+
+inline std::wstring GetRandomString(const std::wstring& random_table,
+                                    const unsigned int len) {
+  std::wstring random_string;
+  if (len <= 0) {
+    return L"";
+  }
+  std::wstring random_table_real(random_table);
+  if (random_table_real.empty()) {
+    random_table_real = L"1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  }
+  static bool seeded = false;
+  if (!seeded) {
+    srand((unsigned int)time(NULL));
+    seeded = true;
+  }
+  for (int i = 0; i < len; ++i) {
+    int r = rand() % (random_table_real.length());
+    random_string += random_table_real.at(r);
+  }
+  return random_string;
 }
 
 } //namespace stringoperate
