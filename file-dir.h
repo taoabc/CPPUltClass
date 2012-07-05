@@ -42,7 +42,7 @@ inline void SplitToPathPrefixAndFileName(const std::wstring& fullpath,
   }
 }
 
-inline void CanonicalizeDirPathPrefix(std::wstring* dirpath) {
+inline void CanonicalizeDirPathPostfix(std::wstring* dirpath) {
   if (dirpath->empty()) {
     return;
   }
