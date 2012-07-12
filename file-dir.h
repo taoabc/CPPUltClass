@@ -88,7 +88,7 @@ inline void GetMaxFreeSpaceDrive(std::wstring* drive,
           drive->assign(drive_tmp);
         }
       }
-      i += static_cast<DWORD>(wcslen(drive_tmp)) + 1;
+      i = static_cast<DWORD>(wcslen(drive_tmp)) + 1;
       drive_tmp += i;
     }
   }
