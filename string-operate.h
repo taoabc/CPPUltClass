@@ -212,7 +212,7 @@ inline std::wstring GetRandomString(const std::wstring& random_table,
     srand((unsigned int)time(NULL));
     seeded = true;
   }
-  for (int i = 0; i < len; ++i) {
+  for (unsigned i = 0; i < len; ++i) {
     int r = rand() % (random_table_real.length());
     random_string += random_table_real.at(r);
   }

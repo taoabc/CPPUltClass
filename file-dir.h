@@ -51,6 +51,23 @@ inline void CanonicalizeDirPathPostfix(std::wstring* dirpath) {
   }
 }
 
+inline void AppendPath(const std::wstring& pre,
+                       const std::wstring& post,
+                       std::wstring* result) {
+  std::wstring t(pre);
+  CanonicalizeDirPathPostfix(&t);
+  *result = t + post;
+}
+
+inline void AppendPathWithPostfix(const std::wstring& pre,
+                                  const std::wstring post,
+                                  std::wstring* path) {
+  path->assign(pre);
+  CanonicalizeDirPathPostfix(path);
+  path->append(post);
+  CanonicalizeDirPathPostfix(path);
+}
+
 inline void GetMaxFreeSpaceDrive(std::wstring* drive,
                                  unsigned __int64* freesize) {
   DWORD buf_len = ::GetLogicalDriveStrings(0, NULL);
@@ -129,12 +146,12 @@ inline bool MakeSureFolderExist(const std::wstring& folder_path) {
   int index = 0;
   bool ret = false;
   std::wstring normalize_path(folder_path);
-  CanonicalizeDirPathPrefix(&normalize_path);
+  CanonicalizeDirPathPostfix(&normalize_path);
   while ((index = normalize_path.find(L'\\', index)) != std::string::npos) {
     index++;
     std::wstring path = normalize_path.substr(0, index);
     if (0 == CreateDirectory(path.c_str(), NULL)) {
-      if (GetLastError() != ERROR_ALREADY_EXISTS) {
+      if (GetLastError() == ERROR_ALREADY_EXISTS) {
         ret = true;
       } else {
         ret = false;
@@ -164,7 +181,7 @@ inline bool RecursiveRemoveDirectory(const std::wstring& directory) {
   //pFrom and pTo need double-null terminate
   wchar_t tmp[MAX_PATH+1];
   memset(tmp, 0, sizeof (tmp));
-  wcscpy(tmp, directory.c_str());
+  wcscpy_s(tmp, directory.c_str());
   SHFILEOPSTRUCT fileop;
   fileop.hwnd = NULL;
   fileop.wFunc = FO_DELETE;
