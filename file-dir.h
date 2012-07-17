@@ -164,9 +164,7 @@ inline bool MakeSureFolderExist(const std::wstring& folder_path) {
 }
 
 inline bool DeleteFileAlways(const std::wstring& filename) {
-  if (::SetFileAttributes(filename.c_str(), 0) == 0) {
-    return false;
-  }
+  ::SetFileAttributes(filename.c_str(), 0);
   if (::DeleteFile(filename.c_str()) == 0) {
     return false;
   }

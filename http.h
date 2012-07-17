@@ -12,12 +12,14 @@
 namespace ult {
 namespace http {
 
-inline void HttpRequest(const std::wstring& url, std::string* content) {
+inline bool HttpRequest(const std::wstring& url, std::string* content) {
   HINTERNET hopen = NULL;
   HINTERNET hopenurl = NULL;
   DWORD dwsize = 0;
   DWORD dwdownloaded = 0;
   char* buf = NULL;
+  bool result = false;
+
   hopen = InternetOpen(NULL, INTERNET_OPEN_TYPE_PRECONFIG,
       NULL, NULL, 0);
   if (hopen != NULL) {
@@ -33,6 +35,7 @@ inline void HttpRequest(const std::wstring& url, std::string* content) {
   }
 
   if (hopenurl != NULL) {
+    content->clear();
     do {
       dwsize = 0;
       if (!InternetQueryDataAvailable(hopenurl, &dwsize, 0, 0)) {
@@ -42,6 +45,7 @@ inline void HttpRequest(const std::wstring& url, std::string* content) {
       memset(buf, 0, dwsize+1);
       if (InternetReadFile(hopenurl, buf, dwsize, &dwdownloaded)) {
         content->append(buf, dwdownloaded);
+        result = true;
       }
       delete[] buf;
     } while (dwsize > 0);
@@ -52,6 +56,7 @@ inline void HttpRequest(const std::wstring& url, std::string* content) {
   if (hopenurl != NULL) {
     InternetCloseHandle(hopenurl);
   }
+  return result;
 }
 
 } // namespace http
