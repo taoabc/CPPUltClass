@@ -178,8 +178,9 @@ inline bool SetFileAttributes(const std::wstring& filename, DWORD file_attribute
 inline bool RecursiveRemoveDirectory(const std::wstring& directory) {
   //pFrom and pTo need double-null terminate
   wchar_t tmp[MAX_PATH+1];
-  memset(tmp, 0, sizeof (tmp));
   wcscpy_s(tmp, directory.c_str());
+  tmp[directory.length()] = L'\0';
+  tmp[directory.length()+1] = L'\0';
   SHFILEOPSTRUCT fileop;
   fileop.hwnd = NULL;
   fileop.wFunc = FO_DELETE;
