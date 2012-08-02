@@ -5,12 +5,36 @@
 #define ULT_HTTP_H_
 
 #include <string>
+#include <vector>
 #include <Wininet.h>
 
 #pragma comment(lib, "Wininet.lib")
 
 namespace ult {
-namespace http {
+
+class HttpRequest {
+
+public:
+
+  HttpRequest(void) {
+
+  }
+
+  ~HttpRequest() {
+    if (hopen_ != NULL) {
+      InternetCloseHandle(hopen_);
+    }
+    if (hopenurl_ != NULL) {
+      InternetCloseHandle(hopenurl_);
+    }
+  }
+
+private:
+
+  HINTERNET hopen_;
+  HINTERNET hopenurl_;
+
+};
 
 inline bool HttpRequest(const std::wstring& url, std::string* content) {
   HINTERNET hopen = NULL;
@@ -21,7 +45,7 @@ inline bool HttpRequest(const std::wstring& url, std::string* content) {
   bool result = false;
 
   hopen = InternetOpen(NULL, INTERNET_OPEN_TYPE_PRECONFIG,
-      NULL, NULL, 0);
+    NULL, NULL, 0);
   if (hopen != NULL) {
     DWORD len = 1;
     wchar_t tmp[1];
@@ -30,7 +54,7 @@ inline bool HttpRequest(const std::wstring& url, std::string* content) {
     wchar_t* canonical_url = new wchar_t[len];
     InternetCanonicalizeUrl(url.c_str(), canonical_url, &len, ICU_BROWSER_MODE);
     hopenurl = InternetOpenUrl(hopen, canonical_url, NULL, 0,
-        INTERNET_FLAG_NO_UI | INTERNET_FLAG_PRAGMA_NOCACHE, 0);
+      INTERNET_FLAG_NO_UI | INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_NO_CACHE_WRITE, 0);
     delete[] canonical_url;
   }
 
@@ -58,10 +82,6 @@ inline bool HttpRequest(const std::wstring& url, std::string* content) {
   }
   return result;
 }
-
-} // namespace http
-
-using namespace http;
 
 } // namespace ult
 
