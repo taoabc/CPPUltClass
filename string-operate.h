@@ -15,6 +15,7 @@
 #include <ctime>
 
 namespace ult {
+
 namespace stringoperate {
 
 inline std::wstring MultiByteToUnicode(const char* src, int len, unsigned int codepage) {
@@ -39,8 +40,10 @@ inline std::string UnicodeToMultiByte(const wchar_t* src, int len, unsigned int 
   return dest;
 }
 
+}
+
 inline std::wstring Utf8ToUnicode(const char* src, int len) {
-  return MultiByteToUnicode(src, len, CP_UTF8);
+  return stringoperate::MultiByteToUnicode(src, len, CP_UTF8);
 }
 
 inline std::wstring Utf8ToUnicode(const std::string& src) {
@@ -48,7 +51,7 @@ inline std::wstring Utf8ToUnicode(const std::string& src) {
 }
 
 inline std::string UnicodeToUtf8(const wchar_t* src, int len) {
-  return UnicodeToMultiByte(src, len, CP_UTF8);
+  return stringoperate::UnicodeToMultiByte(src, len, CP_UTF8);
 }
 
 inline std::string UnicodeToUtf8(const std::wstring& src) {
@@ -56,7 +59,7 @@ inline std::string UnicodeToUtf8(const std::wstring& src) {
 }
 
 inline std::wstring AnsiToUnicode(const char* src, int len) {
-  return MultiByteToUnicode(src, len, CP_ACP);
+  return stringoperate::MultiByteToUnicode(src, len, CP_ACP);
 }
 
 inline std::wstring AnsiToUnicode(const std::string& src) {
@@ -64,7 +67,7 @@ inline std::wstring AnsiToUnicode(const std::string& src) {
 }
 
 inline std::string UnicodeToAnsi(const wchar_t* src, int len) {
-  return UnicodeToMultiByte(src, len, CP_ACP);
+  return stringoperate::UnicodeToMultiByte(src, len, CP_ACP);
 }
 
 inline std::string UnicodeToAnsi(const std::wstring& src) {
@@ -111,12 +114,16 @@ inline bool SplitString(const std::wstring& src,
   return true;
 }
 
+namespace stringoperate {
+
 inline bool EqWchar(const wchar_t& c1, const wchar_t& c2) {
   return std::towupper(c1) == std::towupper(c2);
 }
 
 inline bool LtWchar(const wchar_t& c1, const wchar_t& c2) {
   return std::towupper(c1) < std::towupper(c2);
+}
+
 }
 
 inline int CompareStringNoCase(const std::wstring& comp1,
@@ -127,12 +134,14 @@ inline int CompareStringNoCase(const std::wstring& comp1,
     return len1 < len2 ? -1 : 1;
   }
   for (int i = 0; i < len1; ++i) {
-    if (!EqWchar(comp1.at(i), comp2.at(i))) {
-      return LtWchar(comp1.at(i), comp2.at(i)) ? -1 : 1;
+    if (!stringoperate::EqWchar(comp1.at(i), comp2.at(i))) {
+      return stringoperate::LtWchar(comp1.at(i), comp2.at(i)) ? -1 : 1;
     }
   }
   return 0;
 }
+
+namespace stringoperate {
 
 inline std::wstring UInt64ToString(unsigned __int64 num) {
   wchar_t temp[32];
@@ -148,18 +157,20 @@ inline std::wstring UInt64ToString(unsigned __int64 num) {
   return result;
 }
 
+}
+
 inline std::wstring IntToString(__int64 num) {
   std::wstring result;
   if (num < 0) {
     result += L'-';
     num = -num;
   }
-  result.append(UInt64ToString(num));
+  result.append(stringoperate::UInt64ToString(num));
   return result;
 }
 
 inline std::wstring UIntToString(unsigned __int64 num) {
-  return UInt64ToString(num);
+  return stringoperate::UInt64ToString(num);
 }
 
 inline std::string UrlEncode(const char* s, int len) {
@@ -219,10 +230,6 @@ inline std::wstring GetRandomString(const std::wstring& random_table,
   }
   return random_string;
 }
-
-} //namespace stringoperate
-
-using namespace stringoperate;
 
 } //namespace ult
 

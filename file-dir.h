@@ -12,7 +12,6 @@
 #include <shellapi.h>
 
 namespace ult {
-namespace filedir {
 
 inline void SplitToPureNameAnddExtension(const std::wstring& fullname,
                                          std::wstring* purename,
@@ -57,15 +56,6 @@ inline void AppendPath(const std::wstring& pre,
   std::wstring t(pre);
   CanonicalizeDirPathPostfix(&t);
   *result = t + post;
-}
-
-inline void AppendPathWithPostfix(const std::wstring& pre,
-                                  const std::wstring post,
-                                  std::wstring* path) {
-  path->assign(pre);
-  CanonicalizeDirPathPostfix(path);
-  path->append(post);
-  CanonicalizeDirPathPostfix(path);
 }
 
 inline void GetMaxFreeSpaceDrive(std::wstring* drive,
@@ -191,10 +181,6 @@ inline bool RecursiveRemoveDirectory(const std::wstring& directory) {
 
   return (::SHFileOperation(&fileop) == 0);
 }
-
-} //namespace filedir
-
-using namespace filedir;
 
 } //namespace ult
 

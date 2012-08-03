@@ -7,11 +7,9 @@
 #define ULT_INI_H_
 
 #include <string>
-//#include <cstdio>
 #include <Windows.h>
 
 namespace ult {
-namespace ini {
 
 class Ini {
 
@@ -24,41 +22,50 @@ public:
   ~Ini(void) {
   }
 
-  Ini(const wchar_t* filename) : config_filename_(filename) {
+  Ini(const std::wstring& filename) : config_filename_(filename) {
   }
 
-  void AssignFile(const wchar_t* filename) {
+  void AssignFile(const std::wstring& filename) {
     config_filename_.assign(filename);
   }
 
-  bool WriteString(const wchar_t* section, const wchar_t* entry,
-                   const wchar_t* str) {
+  bool WriteString(const std::wstring& section,
+                   const std::wstring& entry,
+                   const std::wstring& str) {
     if (config_filename_.empty()) {
       return false;
     }
-    return 0 != WritePrivateProfileString(section,
-        entry, str, config_filename_.c_str());
+    return 0 != WritePrivateProfileString(section.c_str(),
+        entry.c_str(), str.c_str(), config_filename_.c_str());
   }
 
-  std::wstring GetString(const wchar_t* section, const wchar_t* entry,
-                         const wchar_t* string_default=NULL) {
+  std::wstring GetString(const std::wstring& section,
+                         const std::wstring& entry,
+                         const std::wstring& string_default = L"") {
     if (config_filename_.empty()) {
       return L"";
     }
     wchar_t buf[kMaxValueLen];
-    GetPrivateProfileString(section, entry, string_default, buf, kMaxValueLen, config_filename_.c_str());
+    const wchar_t* pdef = string_default.empty() ? NULL : string_default.c_str();
+    GetPrivateProfileString(section.c_str(), entry.c_str(), pdef, buf,
+        kMaxValueLen, config_filename_.c_str());
     std::wstring result(buf);
     return result;
   }
 
-  bool WriteInt(const wchar_t* section, const wchar_t* entry, int number) {
+  bool WriteInt(const std::wstring& section,
+                const std::wstring& entry,
+                int number) {
     wchar_t buf[kMaxIntLength];
     swprintf(buf, kMaxIntLength, L"%d", number);
     return WriteString(section, entry, buf);
   }
 
-  int GetInt(const wchar_t* section, const wchar_t* entry, int num_default = -1) {
-    return GetPrivateProfileInt(section, entry, num_default, config_filename_.c_str());
+  int GetInt(const std::wstring& section,
+             const std::wstring& entry,
+             int num_default = -1) {
+    return GetPrivateProfileInt(section.c_str(), entry.c_str(), num_default,
+        config_filename_.c_str());
   }
 
 private:
@@ -67,12 +74,10 @@ private:
     kMaxValueLen = 1024,
     kMaxIntLength = 256
   };
+
 	std::wstring config_filename_;
+
 };
-
-}
-
-using namespace ini;
 
 } //namespace ult
 

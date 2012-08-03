@@ -1,10 +1,10 @@
 #ifndef ULT_LIBRARY_H_
 #define ULT_LIBRARY_H_
 
+#include <string>
 #include <windows.h>
 
 namespace ult {
-namespace library {
 
 class Library {
 
@@ -51,16 +51,16 @@ public:
     return true;
   }
 
-  bool Load(const wchar_t* filename) {
-    return LoadOperations(::LoadLibrary(filename));
+  bool Load(const std::wstring& filename) {
+    return LoadOperations(::LoadLibrary(filename.c_str()));
   }
 
-  bool LoadEx(const wchar_t* filename, DWORD flags) {
-    return LoadOperations(::LoadLibraryEx(filename, NULL, flags));
+  bool LoadEx(const std::wstring& filename, DWORD flags) {
+    return LoadOperations(::LoadLibraryEx(filename.c_str(), NULL, flags));
   }
 
-  FARPROC GetProc(const char* procname) const {
-    return ::GetProcAddress(module_, procname);
+  FARPROC GetProc(const std::string& procname) const {
+    return ::GetProcAddress(module_, procname.c_str());
   }
 
 private:
@@ -79,9 +79,6 @@ private:
   HMODULE module_;
 
 };
-} //namespace library
-
-using namespace library;
 
 } //namespace ult
 

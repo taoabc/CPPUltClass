@@ -10,7 +10,6 @@
 #include <vector>
 
 namespace ult {
-namespace number {
 
 inline void SwapInteger(int* x, int *y) {
   if (*x != *y) {
@@ -48,6 +47,8 @@ inline void DisorderInteger(int begin_number, int end_number, std::vector<int>* 
   }
 }
 
+namespace number {
+
 inline void DecreaseVals(unsigned __int64* numberator, unsigned __int64* denominator) {
   static const unsigned __int64 kMax = (unsigned __int64)1 << 31;
   while (*numberator > kMax) {
@@ -56,21 +57,19 @@ inline void DecreaseVals(unsigned __int64* numberator, unsigned __int64* denomin
   }
 }
 
+}
+
 //to calculate numberator1*numberator2 / denominator
 inline unsigned __int64 UIntMultDiv(unsigned __int64 numberator1,
                                     unsigned __int64 numberator2,
                                     unsigned __int64 denominator) {
-  DecreaseVals(&numberator1, &denominator);
-  DecreaseVals(&numberator2, &denominator);
+  number::DecreaseVals(&numberator1, &denominator);
+  number::DecreaseVals(&numberator2, &denominator);
   if (denominator == 0) {
     denominator = 1;
   }
   return numberator1 * numberator2 / denominator;
 }
-
-} //namespace number
-
-using namespace number;
 
 } //namespace ult
 

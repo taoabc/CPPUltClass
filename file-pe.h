@@ -9,7 +9,6 @@
 #include "file-io.h"
 
 namespace ult{
-namespace filepe {
 
 class FilePE {
 
@@ -71,10 +70,6 @@ private:
   IMAGE_NT_HEADERS nt_headers_;
 
 };
-
-}//namespace filepe
-
-using namespace filepe;
 
 }//namespace ult
 
