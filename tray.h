@@ -74,7 +74,8 @@ class Tray {
 
 public:
 
-  Tray(void) {
+  Tray(void) : 
+      is_created_(false) {
     memset(&notify_icon_data_, 0, sizeof(notify_icon_data_));
     DWORD shell_version = GetShellVersion();
     shell_major_version_ = HIWORD(shell_version);
@@ -82,9 +83,7 @@ public:
   }
 
   ~Tray(void) {
-    if (0 != notify_icon_data_.cbSize) {
-      Shell_NotifyIcon(NIM_DELETE, &notify_icon_data_);
-    }
+    DeleteIcon();
   }
 
   bool Create(HWND hwnd, UINT uid, UINT ucallback_msg, HICON htray_icon, wchar_t* sztip) {
@@ -95,19 +94,36 @@ public:
     notify_icon_data_.hIcon = htray_icon;
     wcscpy(notify_icon_data_.szTip, sztip);
 
-    AddTrayIcon();
-
-    return true;
+    is_created_ = AddTrayIcon();
+    return is_created_;
   }
 
-  bool AddTrayIcon(void) {
-    notify_icon_data_.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-    Shell_NotifyIcon(NIM_ADD, &notify_icon_data_);
-    return true;
+  bool SetIcon(HICON hicon) {
+    notify_icon_data_.hIcon = hicon;
+    notify_icon_data_.uFlags |= NIF_ICON;
+    return (0 != Shell_NotifyIcon(NIM_MODIFY, &notify_icon_data_));
+  }
+
+  bool SetIcon(UINT resid) {
+    return SetIcon(NULL, resid);
+  }
+
+  bool SetIcon(HINSTANCE hinst, UINT resid) {
+    const wchar_t* resname = MAKEINTRESOURCE(resid);
+    HICON hicon = (HICON)LoadImage(hinst, resname, IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+    if (hicon == NULL) {
+      hicon = (HICON)LoadImage(hinst, resname, IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+    }
+    bool result = false;
+    if (hicon != NULL) {
+      result = SetIcon(hicon);
+      DestroyIcon(hicon);
+    }
+    return result;
   }
 
   bool ShowBallonInfo(const wchar_t* info_title, const wchar_t* info, UINT timeout) {
-    if (5 > shell_major_version_) {
+    if (shell_major_version_ < 5) {
       return false;
     }
     SetBallonInfo(info_title, info, timeout);
@@ -116,16 +132,16 @@ public:
   }
 
   bool ShowBallonInfo(void) {
-    if (5 > shell_major_version_) {
+    if (shell_major_version_ < 5) {
       return false;
     }
-    notify_icon_data_.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP | NIF_INFO;
+    notify_icon_data_.uFlags |= NIF_INFO;
     Shell_NotifyIcon(NIM_MODIFY, &notify_icon_data_);
     return true;
   }
 
   bool SetBallonInfo(const wchar_t* info_title, const wchar_t* info, UINT timeout) {
-    if (5 > shell_major_version_) {
+    if (shell_major_version_ < 5) {
       return false;
     }
     notify_icon_data_.dwInfoFlags = NIIF_USER;
@@ -136,14 +152,29 @@ public:
   }
 
   bool SetBallonInfoContent(const wchar_t* info) {
-    if (5 > shell_major_version_) {
+    if (shell_major_version_ < 5) {
       return false;
     }
     wcscpy(notify_icon_data_.szInfo, info);
     return true;
   }
 
+  bool DeleteIcon(void) {
+    if (!is_created_) {
+      return true;
+    } else {
+      bool delete_result = (0 != Shell_NotifyIcon(NIM_DELETE, &notify_icon_data_));
+      is_created_ = false;
+      return delete_result;
+    }
+  }
+
 private:
+
+  bool AddTrayIcon(void) {
+    notify_icon_data_.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+    return (0 != Shell_NotifyIcon(NIM_ADD, &notify_icon_data_));
+  }
 
   DWORD GetShellVersion(void) {
     HINSTANCE hinst_dll;
@@ -169,16 +200,16 @@ private:
   }
 
   DWORD GetNOTIFYICONDATASizeForOS(void) {
-    if (5 > shell_major_version_) {
+    if (shell_major_version_ < 5) {
       return sizeof(NOTIFYICONDATA_1);
-    } else if (5 == shell_major_version_) {
+    } else if (shell_major_version_ == 5) {
       return sizeof(NOTIFYICONDATA_2);
-    } else if (6 == shell_major_version_) {
-      if (0 == shell_minor_version_) {
+    } else if (shell_major_version_ == 6) {
+      if (shell_minor_version_ == 0) {
         //这里因为系统版本的定义而不能使用
         //return NOTIFYICONDATA_V3_SIZE;
         return sizeof (NOTIFYICONDATA_3);
-      } else if (0 < shell_minor_version_) {
+      } else if (shell_minor_version_ > 0) {
         return sizeof (NOTIFYICONDATA);
       }
     }
@@ -188,7 +219,7 @@ private:
   NOTIFYICONDATA notify_icon_data_;
   WORD shell_major_version_;
   WORD shell_minor_version_;
-
+  bool is_created_;
 };
 
 }
