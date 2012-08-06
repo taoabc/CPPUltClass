@@ -13,9 +13,9 @@
 
 namespace ult {
 
-inline void SplitToPureNameAnddExtension(const std::wstring& fullname,
-                                         std::wstring* purename,
-                                         std::wstring* extension) {
+inline void ToPurenameAndExtension(const std::wstring& fullname,
+                                   std::wstring* purename,
+                                   std::wstring* extension) {
   int pos = fullname.rfind(L".");
   if (pos == std::wstring::npos) {
     purename->assign(fullname);
@@ -26,10 +26,10 @@ inline void SplitToPureNameAnddExtension(const std::wstring& fullname,
   }
 }
 
-inline void SplitToPathPrefixAndFileName(const std::wstring& fullpath,
-                                         const std::wstring& pathseparator,
-                                         std::wstring* pathprefix,
-                                         std::wstring* filename) {
+inline void ToDirectoryAndFilename(const std::wstring& fullpath,
+                                   const std::wstring& pathseparator,
+                                   std::wstring* pathprefix,
+                                   std::wstring* filename) {
   int separator_len = pathseparator.length();
   int pos = fullpath.rfind(pathseparator);
   if (pos == std::wstring::npos) {
@@ -41,7 +41,7 @@ inline void SplitToPathPrefixAndFileName(const std::wstring& fullpath,
   }
 }
 
-inline void CanonicalizeDirPathPostfix(std::wstring* dirpath) {
+inline void CanonicalizeDirectoryPostfix(std::wstring* dirpath) {
   if (dirpath->empty()) {
     return;
   }
@@ -50,12 +50,10 @@ inline void CanonicalizeDirPathPostfix(std::wstring* dirpath) {
   }
 }
 
-inline void AppendPath(const std::wstring& pre,
-                       const std::wstring& post,
-                       std::wstring* result) {
-  std::wstring t(pre);
-  CanonicalizeDirPathPostfix(&t);
-  *result = t + post;
+inline void AppendPath(std::wstring* toappend,
+  const std::wstring& post) {
+    CanonicalizeDirectoryPostfix(toappend);
+    toappend->append(post);
 }
 
 inline void GetMaxFreeSpaceDrive(std::wstring* drive,
@@ -136,7 +134,7 @@ inline bool MakeSureFolderExist(const std::wstring& folder_path) {
   int index = 0;
   bool ret = false;
   std::wstring normalize_path(folder_path);
-  CanonicalizeDirPathPostfix(&normalize_path);
+  CanonicalizeDirectoryPostfix(&normalize_path);
   while ((index = normalize_path.find(L'\\', index)) != std::string::npos) {
     index++;
     std::wstring path = normalize_path.substr(0, index);

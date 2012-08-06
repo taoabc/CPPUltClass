@@ -8,7 +8,8 @@
 
 #include <string>
 #include <windows.h>
-#include <Shlwapi.h>
+#include <shellapi.h>
+#include <shlwapi.h>
 
 #ifndef NIIF_USER
 #define NIIF_USER 0x00000004
@@ -86,16 +87,26 @@ public:
     DeleteIcon();
   }
 
-  bool Create(HWND hwnd, UINT uid, UINT ucallback_msg, HICON htray_icon, wchar_t* sztip) {
+  bool Create(HWND hwnd, UINT uid, UINT ucallback_msg, HICON htray_icon, const wchar_t* sztip) {
+    memset(&notify_icon_data_, 0, sizeof (notify_icon_data_));
     notify_icon_data_.cbSize = GetNOTIFYICONDATASizeForOS();
     notify_icon_data_.hWnd = hwnd;
     notify_icon_data_.uID = uid;
     notify_icon_data_.uCallbackMessage = ucallback_msg;
     notify_icon_data_.hIcon = htray_icon;
-    wcscpy(notify_icon_data_.szTip, sztip);
+    if (sztip != NULL) {
+      wcscpy_s(notify_icon_data_.szTip, sztip);
+    }
 
     is_created_ = AddTrayIcon();
     return is_created_;
+  }
+
+  bool Create(HWND hwnd, UINT uid, UINT ucallback_msg, UINT tray_icon_resid, const wchar_t* sztip) {
+    HICON tray_icon = LoadIconResource(GetModuleHandle(NULL), tray_icon_resid);
+    bool result = Create(hwnd, uid, ucallback_msg, tray_icon, sztip);
+    DestroyIcon(tray_icon);
+    return result;
   }
 
   bool SetIcon(HICON hicon) {
@@ -105,15 +116,11 @@ public:
   }
 
   bool SetIcon(UINT resid) {
-    return SetIcon(NULL, resid);
+    return SetIcon(GetModuleHandle(NULL), resid);
   }
 
   bool SetIcon(HINSTANCE hinst, UINT resid) {
-    const wchar_t* resname = MAKEINTRESOURCE(resid);
-    HICON hicon = (HICON)LoadImage(hinst, resname, IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
-    if (hicon == NULL) {
-      hicon = (HICON)LoadImage(hinst, resname, IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
-    }
+    HICON hicon = LoadIconResource(hinst, resid);
     bool result = false;
     if (hicon != NULL) {
       result = SetIcon(hicon);
@@ -146,8 +153,8 @@ public:
     }
     notify_icon_data_.dwInfoFlags = NIIF_USER;
     notify_icon_data_.uTimeout = timeout;
-    wcscpy(notify_icon_data_.szInfoTitle, info_title);
-    wcscpy(notify_icon_data_.szInfo, info);
+    wcscpy_s(notify_icon_data_.szInfoTitle, info_title);
+    wcscpy_s(notify_icon_data_.szInfo, info);
     return true;
   }
 
@@ -155,7 +162,7 @@ public:
     if (shell_major_version_ < 5) {
       return false;
     }
-    wcscpy(notify_icon_data_.szInfo, info);
+    wcscpy_s(notify_icon_data_.szInfo, info);
     return true;
   }
 
@@ -174,6 +181,15 @@ private:
   bool AddTrayIcon(void) {
     notify_icon_data_.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     return (0 != Shell_NotifyIcon(NIM_ADD, &notify_icon_data_));
+  }
+
+  HICON LoadIconResource(HINSTANCE hinst, UINT resid) {
+    const wchar_t* resname = MAKEINTRESOURCE(resid);
+    HICON hicon = (HICON)LoadImage(hinst, resname, IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+    if (hicon == NULL) {
+      hicon = (HICON)LoadImage(hinst, resname, IMAGE_ICON, 32, 32, LR_DEFAULTCOLOR);
+    }
+    return hicon;
   }
 
   DWORD GetShellVersion(void) {
