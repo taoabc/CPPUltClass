@@ -9,7 +9,6 @@
 #include <string>
 #include <windows.h>
 #include <shellapi.h>
-#include <shlwapi.h>
 
 #ifndef NIIF_USER
 #define NIIF_USER 0x00000004
@@ -17,66 +16,13 @@
 
 namespace ult {
 
-typedef struct _NOTIFYICONDATA_1 //The version of the structure supported by Shell v4
-{
-  DWORD cbSize;
-  HWND hWnd;
-  UINT uID;
-  UINT uFlags;
-  UINT uCallbackMessage;
-  HICON hIcon;
-  TCHAR szTip[64];
-} NOTIFYICONDATA_1;
-
-typedef struct _NOTIFYICONDATA_2 //The version of the structure supported by Shell v5
-{
-  DWORD cbSize;
-  HWND hWnd;
-  UINT uID;
-  UINT uFlags;
-  UINT uCallbackMessage;
-  HICON hIcon;
-  TCHAR szTip[128];
-  DWORD dwState;
-  DWORD dwStateMask;
-  TCHAR szInfo[256];
-  union 
-  {
-    UINT uTimeout;
-    UINT uVersion;
-  } DUMMYUNIONNAME;
-  TCHAR szInfoTitle[64];
-  DWORD dwInfoFlags;
-} NOTIFYICONDATA_2;
-
-typedef struct _NOTIFYICONDATA_3 //The version of the structure supported by Shell v6
-{
-  DWORD cbSize;
-  HWND hWnd;
-  UINT uID;
-  UINT uFlags;
-  UINT uCallbackMessage;
-  HICON hIcon;
-  TCHAR szTip[128];
-  DWORD dwState;
-  DWORD dwStateMask;
-  TCHAR szInfo[256];
-  union 
-  {
-    UINT uTimeout;
-    UINT uVersion;
-  } DUMMYUNIONNAME;
-  TCHAR szInfoTitle[64];
-  DWORD dwInfoFlags;
-  GUID guidItem;
-} NOTIFYICONDATA_3;
-
 class Tray {
 
 public:
 
   Tray(void) : 
-      is_created_(false) {
+      is_created_(false),
+      tray_icon_(NULL) {
     memset(&notify_icon_data_, 0, sizeof(notify_icon_data_));
     DWORD shell_version = GetShellVersion();
     shell_major_version_ = HIWORD(shell_version);
@@ -87,25 +33,44 @@ public:
     DeleteIcon();
   }
 
-  bool Create(HWND hwnd, UINT uid, UINT ucallback_msg, HICON htray_icon, const wchar_t* sztip) {
+  bool Create(HWND hwnd, UINT uid, UINT ucallback_msg, HICON htray_icon, const std::wstring& tip) {
     memset(&notify_icon_data_, 0, sizeof (notify_icon_data_));
     notify_icon_data_.cbSize = GetNOTIFYICONDATASizeForOS();
     notify_icon_data_.hWnd = hwnd;
     notify_icon_data_.uID = uid;
     notify_icon_data_.uCallbackMessage = ucallback_msg;
     notify_icon_data_.hIcon = htray_icon;
-    if (sztip != NULL) {
-      wcscpy_s(notify_icon_data_.szTip, sztip);
+    notify_icon_data_.uFlags = NIF_ICON | NIF_MESSAGE;
+    if (!tip.empty()) {
+      notify_icon_data_.uFlags |=  NIF_TIP;
+      wcscpy(notify_icon_data_.szTip, tip.c_str());
     }
 
     is_created_ = AddTrayIcon();
     return is_created_;
   }
 
-  bool Create(HWND hwnd, UINT uid, UINT ucallback_msg, UINT tray_icon_resid, const wchar_t* sztip) {
-    HICON tray_icon = LoadIconResource(GetModuleHandle(NULL), tray_icon_resid);
-    bool result = Create(hwnd, uid, ucallback_msg, tray_icon, sztip);
-    DestroyIcon(tray_icon);
+  bool Create(HWND hwnd, UINT uid, UINT ucallback_msg, HICON htray_icon) {
+    return Create(hwnd, uid, ucallback_msg, htray_icon, L"");
+  }
+
+  bool Create(HWND hwnd, UINT uid, UINT ucallback_msg, UINT tray_icon_resid, const std::wstring& tip) {
+    if (tray_icon_ != NULL) {
+      DestroyIcon(tray_icon_);
+    }
+    tray_icon_ = LoadIconResource(GetModuleHandle(NULL), tray_icon_resid);
+    bool result = Create(hwnd, uid, ucallback_msg, tray_icon_, tip);
+    
+    return result;
+  }
+
+  bool Create(HWND hwnd, UINT uid, UINT ucallback_msg, UINT tray_icon_resid) {
+    if (tray_icon_ != NULL) {
+      DestroyIcon(tray_icon_);
+    }
+    tray_icon_ = LoadIconResource(GetModuleHandle(NULL), tray_icon_resid);
+    bool result = Create(hwnd, uid, ucallback_msg, tray_icon_);
+
     return result;
   }
 
@@ -129,15 +94,6 @@ public:
     return result;
   }
 
-  bool ShowBallonInfo(const wchar_t* info_title, const wchar_t* info, UINT timeout) {
-    if (shell_major_version_ < 5) {
-      return false;
-    }
-    SetBallonInfo(info_title, info, timeout);
-    ShowBallonInfo();
-    return true;
-  }
-
   bool ShowBallonInfo(void) {
     if (shell_major_version_ < 5) {
       return false;
@@ -147,22 +103,37 @@ public:
     return true;
   }
 
-  bool SetBallonInfo(const wchar_t* info_title, const wchar_t* info, UINT timeout) {
+  bool ShowBallonInfo(const std::wstring& info_title,
+                      const std::wstring& info) {
+    if (!SetBallonInfo(info_title, info)) {
+      return false;
+    }
+    return ShowBallonInfo();
+  }
+
+  bool ShowBallonInfo(const std::wstring& info) {
+    if (!SetBallonInfo(info)) {
+      return false;
+    }
+    return ShowBallonInfo();
+  }
+
+  bool SetBallonInfo(const std::wstring& info_title,
+                     const std::wstring& info) {
     if (shell_major_version_ < 5) {
       return false;
     }
     notify_icon_data_.dwInfoFlags = NIIF_USER;
-    notify_icon_data_.uTimeout = timeout;
-    wcscpy_s(notify_icon_data_.szInfoTitle, info_title);
-    wcscpy_s(notify_icon_data_.szInfo, info);
+    wcscpy(notify_icon_data_.szInfoTitle, info_title.c_str());
+    wcscpy(notify_icon_data_.szInfo, info.c_str());
     return true;
   }
 
-  bool SetBallonInfoContent(const wchar_t* info) {
+  bool SetBallonInfo(const std::wstring& info) {
     if (shell_major_version_ < 5) {
       return false;
     }
-    wcscpy_s(notify_icon_data_.szInfo, info);
+    wcscpy(notify_icon_data_.szInfo, info.c_str());
     return true;
   }
 
@@ -171,6 +142,7 @@ public:
       return true;
     } else {
       bool delete_result = (0 != Shell_NotifyIcon(NIM_DELETE, &notify_icon_data_));
+      DestroyIcon(tray_icon_);
       is_created_ = false;
       return delete_result;
     }
@@ -179,7 +151,6 @@ public:
 private:
 
   bool AddTrayIcon(void) {
-    notify_icon_data_.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     return (0 != Shell_NotifyIcon(NIM_ADD, &notify_icon_data_));
   }
 
@@ -216,26 +187,17 @@ private:
   }
 
   DWORD GetNOTIFYICONDATASizeForOS(void) {
-    if (shell_major_version_ < 5) {
-      return sizeof(NOTIFYICONDATA_1);
-    } else if (shell_major_version_ == 5) {
-      return sizeof(NOTIFYICONDATA_2);
-    } else if (shell_major_version_ == 6) {
-      if (shell_minor_version_ == 0) {
-        //这里因为系统版本的定义而不能使用
-        //return NOTIFYICONDATA_V3_SIZE;
-        return sizeof (NOTIFYICONDATA_3);
-      } else if (shell_minor_version_ > 0) {
-        return sizeof (NOTIFYICONDATA);
-      }
+    if (shell_major_version_ >= 5) {
+      return sizeof (notify_icon_data_);
     }
-    return sizeof (NOTIFYICONDATA);
+    return NOTIFYICONDATA_V1_SIZE;
   }
 
   NOTIFYICONDATA notify_icon_data_;
   WORD shell_major_version_;
   WORD shell_minor_version_;
   bool is_created_;
+  HICON tray_icon_;
 };
 
 }
