@@ -9,6 +9,7 @@
 #include <string>
 #include <windows.h>
 #include <shellapi.h>
+#include <Shlwapi.h>
 
 #ifndef NIIF_USER
 #define NIIF_USER 0x00000004
@@ -43,7 +44,7 @@ public:
     notify_icon_data_.uFlags = NIF_ICON | NIF_MESSAGE;
     if (!tip.empty()) {
       notify_icon_data_.uFlags |=  NIF_TIP;
-      wcscpy(notify_icon_data_.szTip, tip.c_str());
+      wcscpy_s(notify_icon_data_.szTip, tip.c_str());
     }
 
     is_created_ = AddTrayIcon();
@@ -124,8 +125,8 @@ public:
       return false;
     }
     notify_icon_data_.dwInfoFlags = NIIF_USER;
-    wcscpy(notify_icon_data_.szInfoTitle, info_title.c_str());
-    wcscpy(notify_icon_data_.szInfo, info.c_str());
+    wcscpy_s(notify_icon_data_.szInfoTitle, info_title.c_str());
+    wcscpy_s(notify_icon_data_.szInfo, info.c_str());
     return true;
   }
 
@@ -133,7 +134,7 @@ public:
     if (shell_major_version_ < 5) {
       return false;
     }
-    wcscpy(notify_icon_data_.szInfo, info.c_str());
+    wcscpy_s(notify_icon_data_.szInfo, info.c_str());
     return true;
   }
 

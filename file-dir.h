@@ -56,12 +56,17 @@ inline void AppendPath(std::wstring* toappend,
     toappend->append(post);
 }
 
+inline unsigned __int64 GetDriveFreeSpace(const std::wstring& drive) {
+  ULARGE_INTEGER freespace;
+  ::GetDiskFreeSpaceEx(drive.c_str(), &freespace, NULL, NULL);
+  return freespace.QuadPart;
+}
+
 inline void GetMaxFreeSpaceDrive(std::wstring* drive,
                                  unsigned __int64* freesize) {
   DWORD buf_len = ::GetLogicalDriveStrings(0, NULL);
   wchar_t* buf = new wchar_t [buf_len];
 
-  ULARGE_INTEGER freespace;
   ULONGLONG maxfree = 0;
 
   if (0 != ::GetLogicalDriveStrings(buf_len, buf)) {
@@ -69,8 +74,7 @@ inline void GetMaxFreeSpaceDrive(std::wstring* drive,
     DWORD i = 0;
     while (i <= buf_len) {
       if (DRIVE_FIXED == ::GetDriveType(drive_tmp)) {
-        ::GetDiskFreeSpaceEx(drive_tmp, &freespace, NULL, NULL);
-        ULONGLONG t = freespace.QuadPart;
+        ULONGLONG t = GetDriveFreeSpace(drive_tmp);
         if (t > maxfree) {
           maxfree = t;
           drive->assign(drive_tmp);
