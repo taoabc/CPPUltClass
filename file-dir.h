@@ -26,7 +26,7 @@ inline void ToPurenameAndExtension(const std::wstring& fullname,
   }
 }
 
-inline void ToDirectoryAndFilename(const std::wstring& fullpath,
+inline void ToUpperpathAndFilename(const std::wstring& fullpath,
                                    const std::wstring& pathseparator,
                                    std::wstring* pathprefix,
                                    std::wstring* filename) {
