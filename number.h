@@ -32,6 +32,7 @@ inline int GetRandomInteger(int min_number, int max_number) {
   return (int)((double)rand() / (RAND_MAX + 1) * (max_number - min_number) + min_number);
 }
 
+//dis order number from [begin_number, end_number)
 inline void DisorderInteger(int begin_number, int end_number, std::vector<int>* vec) {
   if (begin_number > end_number) {
     SwapInteger(&begin_number, &end_number);
