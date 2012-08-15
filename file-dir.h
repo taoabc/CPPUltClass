@@ -41,7 +41,7 @@ inline void ToDirectoryAndFilename(const std::wstring& fullpath,
   }
 }
 
-inline void CanonicalizeDirectoryPostfix(std::wstring* dirpath) {
+inline void AddPathBackslash(std::wstring* dirpath) {
   if (dirpath->empty()) {
     return;
   }
@@ -51,8 +51,8 @@ inline void CanonicalizeDirectoryPostfix(std::wstring* dirpath) {
 }
 
 inline void AppendPath(std::wstring* toappend,
-  const std::wstring& post) {
-    CanonicalizeDirectoryPostfix(toappend);
+                       const std::wstring& post) {
+    AddPathBackslash(toappend);
     toappend->append(post);
 }
 
@@ -138,7 +138,7 @@ inline bool MakeSureFolderExist(const std::wstring& folder_path) {
   int index = 0;
   bool ret = false;
   std::wstring normalize_path(folder_path);
-  CanonicalizeDirectoryPostfix(&normalize_path);
+  AddPathBackslash(&normalize_path);
   while ((index = normalize_path.find(L'\\', index)) != std::string::npos) {
     index++;
     std::wstring path = normalize_path.substr(0, index);

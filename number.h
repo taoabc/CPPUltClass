@@ -19,6 +19,7 @@ inline void SwapInteger(int* x, int *y) {
   }
 }
 
+//get random from [min_number, max_number)
 inline int GetRandomInteger(int min_number, int max_number) {
   static bool seeded = false;
   if (!seeded) {
@@ -28,21 +29,21 @@ inline int GetRandomInteger(int min_number, int max_number) {
   if (min_number > max_number) {
     SwapInteger(&min_number, &max_number);
   }
-  return (int)((double)rand() / RAND_MAX * (max_number - min_number) + min_number);
+  return (int)((double)rand() / (RAND_MAX + 1) * (max_number - min_number) + min_number);
 }
 
 inline void DisorderInteger(int begin_number, int end_number, std::vector<int>* vec) {
   if (begin_number > end_number) {
     SwapInteger(&begin_number, &end_number);
   }
-  for (int i = begin_number; i <= end_number; ++i) {
+  for (int i = begin_number; i < end_number; ++i) {
     vec->push_back(i);
   }
 
   int vec_size = vec->size();
   int r;
   for (int i = 0; i < vec_size; ++i) {
-    r = GetRandomInteger(0, vec_size - 1);
+    r = GetRandomInteger(0, vec_size);
     SwapInteger(&(*vec)[i], &(*vec)[r]);
   }
 }
