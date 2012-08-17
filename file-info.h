@@ -11,7 +11,6 @@
 #include <windows.h>
 
 namespace ult {
-namespace fileinfo {
 
 class FileInfo {
   
@@ -21,10 +20,6 @@ private:
 
   HANDLE hfile_;
 };
-
-}//namespace fileinfo  
-
-using namespace fileinfo;
 
 }
 #endif
