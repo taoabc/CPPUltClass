@@ -63,6 +63,15 @@ public:
     return ::GetProcAddress(module_, procname.c_str());
   }
 
+  FARPROC GetProc(const std::wstring& procname) const {
+    int len = procname.length();
+    char* buf = new char[len*3];
+    int outlen = ::WideCharToMultiByte(CP_ACP, 0, procname.c_str(), len, buf, len*3, NULL, NULL);
+    std::string ansi_procname(buf, outlen);
+    delete[] buf;
+    return GetProc(ansi_procname);
+  }
+
 private:
 
   bool LoadOperations(HMODULE new_module) {

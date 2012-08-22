@@ -10,7 +10,6 @@
 #include <windows.h>
 
 namespace ult {
-namespace file {
 
 class File {
 
@@ -219,10 +218,6 @@ private:
 };
 
 __declspec(selectany) const unsigned int File::kChunkSizeMax_ = (1 << 25);
-
-} //namespace ult
-
-using namespace file;
 
 } //namespace ult
 
