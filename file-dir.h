@@ -124,7 +124,13 @@ inline bool GetUpperPath(const std::wstring& path, std::wstring* upper_path) {
 inline void GetSelfModulePath(std::wstring* path) {
   wchar_t buf[MAX_PATH];
   ::GetModuleFileName(NULL, buf, MAX_PATH);
-  GetUpperPath(buf, path);
+  path->assign(buf);
+}
+
+inline void GetSelfModuleDirectory(std::wstring* dir) {
+  wchar_t buf[MAX_PATH];
+  ::GetModuleFileName(NULL, buf, MAX_PATH);
+  GetUpperPath(buf, dir);
 }
 
 inline void GetModulePathByName(const std::wstring& module_name,
