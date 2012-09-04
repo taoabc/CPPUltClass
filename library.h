@@ -1,3 +1,8 @@
+/*
+**  轻度封装DLL调用相关函数
+**  author
+**    taoabc@gmail.com
+*/
 #ifndef ULT_LIBRARY_H_
 #define ULT_LIBRARY_H_
 
