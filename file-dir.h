@@ -133,8 +133,8 @@ inline void GetSelfModuleDirectory(std::wstring* dir) {
   GetUpperPath(buf, dir);
 }
 
-inline void GetModuleDirByName(const std::wstring& module_name,
-                                std::wstring* path) {
+inline void GetNamedModuleDirectory(const std::wstring& module_name,
+                                    std::wstring* path) {
   wchar_t buf[MAX_PATH];
   ::GetModuleFileName(GetModuleHandle(module_name.c_str()), buf, MAX_PATH);
   GetUpperPath(buf, path);
