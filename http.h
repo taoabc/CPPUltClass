@@ -1,5 +1,6 @@
 /* 
 ** http封装类
+** 使用微软库WinINet
 ** author
 **   taoabc@gmail.com
 */
@@ -13,6 +14,161 @@
 #pragma comment(lib, "Wininet.lib")
 
 namespace ult {
+  
+typedef void (*PHttpStringHandle)(
+    int status,
+    int progress,
+    const std::string& content);
+typedef void (*PHttpFileHandle)(
+    int status,
+    int progress,
+    const std::wstring& filename);
+
+class Http {
+
+public:
+
+  static bool CanonicalizeUrl(const std::wstring& src, std::wstring* dest) {
+    wchar_t ch;
+    DWORD len = 1;
+    bool ret = (0 != InternetCanonicalizeUrl(src.c_str(), &ch, &len, ICU_BROWSER_MODE));
+    if (!ret) {
+      wchar_t* buf = new wchar_t[len];
+      ret = (0 != InternetCanonicalizeUrl(src.c_str(), buf, &len, ICU_BROWSER_MODE));
+      dest->assign(buf, len);
+      delete[] buf;
+    }
+    return ret;
+  }
+
+  Http(void) :
+      handle_opened_(false) {
+  }
+  ~Http(void) {
+    CloseHandles();
+  }
+
+  bool DownloadString(const std::wstring& url, PHttpStringHandle HttpStringHandle) {
+    OpenHandles(url);
+    ReadData(NULL);
+    DWORD status;
+    DWORD size;
+    QueryInfoNumber(HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status, &size);
+    return false;
+  }
+
+  bool DownloadFile(const std::wstring& url, PHttpFileHandle HttpfileHandle) {
+    return false;
+  }
+
+private:
+
+  //private functions
+  bool OpenHandles(const std::wstring& url) {
+    hopen_ = InternetOpen(NULL, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
+    if (hopen_ != NULL) {
+      std::wstring curl;
+      CanonicalizeUrl(url, &curl);
+      hopenurl_ = InternetOpenUrl(hopen_, curl.c_str(), NULL, 0,
+        INTERNET_FLAG_NO_UI | INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_NO_CACHE_WRITE, 0);
+    }
+
+    if (hopenurl_ != NULL) {
+      handle_opened_ = true;
+    }
+
+    return handle_opened_;
+  }
+
+  bool CloseHandles(void) {
+    bool ret1 = true;
+    bool ret2 = true;
+    if (hopen_ != NULL) {
+      ret1 = (0 != InternetCloseHandle(hopen_));
+    }
+    if (hopenurl_ != NULL) {
+      ret2 = (0 != InternetCloseHandle(hopenurl_));
+    }
+    handle_opened_ = false;
+    return ret1 && ret2;
+  }
+
+  bool QueryInfoNumber(DWORD flags, DWORD* num, DWORD* size) {
+    if (!(flags | HTTP_QUERY_FLAG_NUMBER)) {
+      return false;
+    }
+    *size = sizeof (*num);
+    return 0 != HttpQueryInfo(hopenurl_, flags, num, size, NULL);
+  }
+
+  bool QueryInfoString(DWORD flags, void** buffer, DWORD* len) {
+    if ((flags | HTTP_QUERY_FLAG_NUMBER) ||
+        (flags | HTTP_QUERY_FLAG_REQUEST_HEADERS) ||
+        (flags | HTTP_QUERY_FLAG_SYSTEMTIME)) {
+      return false;
+    }
+    bool result = true;
+    void* buf = NULL;
+    DWORD size = 0;
+    while (true) {
+      if(0 == HttpQueryInfo(hopenurl_, flags, (LPVOID)buf, &size, NULL)) {
+        if (GetLastError() == ERROR_HTTP_HEADER_NOT_FOUND) {
+          // Code to handle the case where the header isn't available.
+          break;
+        } else {
+          // Check for an insufficient buffer.
+          if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+            // Allocate the necessary buffer.
+            buf = new char[size];
+            // Retry the call.
+            continue;
+          } else {
+            // Error handling code.
+            if (buf != NULL) {
+              delete[] buf;
+            }
+            result = false;
+            break;
+          }
+        }
+      } //if query fail
+    } //while
+
+    if (result) {
+      *buffer = buf;
+      *len = size;
+    }
+    return result;
+  }
+
+  bool ReadData(void (*Http::ContentHandle)(void* buffer, DWORD len)) {
+    DWORD dwsize = 0;
+    DWORD dwread = 0;
+    char* buf = NULL;
+    while (true) {
+      if (0 == InternetQueryDataAvailable(hopenurl_, &dwsize, 0, 0)) {
+        break;
+      }
+      if (dwsize <= 0) {
+        break;
+      }
+      buf = new char[dwsize];
+      if (InternetReadFile(hopenurl_, buf, dwsize, &dwread)) {
+        if (ContentHandle != NULL) {
+          ContentHandle(buf, dwread);
+        }
+      }
+      delete[] buf;
+    }
+    return true;
+  }
+
+  //private variable
+  HINTERNET hopen_;
+  HINTERNET hopenurl_;
+  bool handle_opened_;
+
+};
 
 namespace http {
 
@@ -29,14 +185,15 @@ inline bool InitInternetHandle(const std::wstring& url,
   hopen = InternetOpen(NULL, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
   if (hopen != NULL) {
     *phopen = hopen;
-    DWORD len = 1;
-    wchar_t tmp[1];
-    InternetCanonicalizeUrl(url.c_str(), tmp, &len, ICU_BROWSER_MODE);
-    wchar_t* canonical_url = new wchar_t[len];
-    InternetCanonicalizeUrl(url.c_str(), canonical_url, &len, ICU_BROWSER_MODE);
-    hopenurl = InternetOpenUrl(hopen, canonical_url, NULL, 0,
+    DWORD len =5;
+    wchar_t ch;
+    wchar_t *buf = NULL;
+    InternetCanonicalizeUrl(url.c_str(), &ch, &len, ICU_BROWSER_MODE);
+    buf = new wchar_t[len];
+    InternetCanonicalizeUrl(url.c_str(), buf, &len, ICU_BROWSER_MODE);
+    hopenurl = InternetOpenUrl(hopen, buf, NULL, 0,
       INTERNET_FLAG_NO_UI | INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_NO_CACHE_WRITE, 0);
-    delete[] canonical_url;
+    delete[] buf;
   }
 
   if (hopenurl != NULL) {
@@ -58,6 +215,35 @@ inline bool HttpDownloadString(const std::wstring& url, std::string* content) {
   bool result = false;
 
   http::InitInternetHandle(url, &hopen, &hopenurl);
+  void* buffer = NULL;
+  DWORD buf_size = 0;
+  while (true) {
+    DWORD status;
+    DWORD l = sizeof (status);
+    HttpQueryInfo(hopenurl, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER,
+      &status, &l, NULL);
+    if (GetLastError() == ERROR_HTTP_HEADER_NOT_FOUND) {
+      // Code to handle the case where the header isn't available.
+      //return true;
+      break;
+    } else {
+      // Check for an insufficient buffer.
+      if (GetLastError()==ERROR_INSUFFICIENT_BUFFER) {
+        // Allocate the necessary buffer.
+        buffer = new char[buf_size];
+
+        // Retry the call.
+        continue;
+      } else {
+        // Error handling code.
+        break;
+      }
+    }
+  } //while
+
+  if (buffer != NULL) {
+    delete[] buffer;
+  }
 
   if (hopenurl != NULL) {
     content->clear();
