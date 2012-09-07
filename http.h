@@ -52,12 +52,19 @@ public:
     OpenHandles(url);
     ReadData(NULL);
     DWORD status;
+    DWORD len;
+    DWORD range;
     DWORD size;
     QueryInfoNumber(HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status, &size);
+    QueryInfoNumber(HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &len, &size);
+    QueryInfoNumber(HTTP_QUERY_CONTENT_RANGE | HTTP_QUERY_FLAG_NUMBER, &range, &size);
+    void* buf;
+    QueryInfoString(HTTP_QUERY_CONTENT_RANGE, &buf, &size);
+    QueryInfoString(HTTP_QUERY_CONTENT_TRANSFER_ENCODING, &buf, &size);
     return false;
   }
 
-  bool DownloadFile(const std::wstring& url, PHttpFileHandle HttpfileHandle) {
+  bool DownloadFile(const std::wstring& url, const std::wstring& file_pat, PHttpFileHandle HttpfileHandle) {
     return false;
   }
 
@@ -94,7 +101,7 @@ private:
   }
 
   bool QueryInfoNumber(DWORD flags, DWORD* num, DWORD* size) {
-    if (!(flags | HTTP_QUERY_FLAG_NUMBER)) {
+    if (!(flags & HTTP_QUERY_FLAG_NUMBER)) {
       return false;
     }
     *size = sizeof (*num);
@@ -102,9 +109,9 @@ private:
   }
 
   bool QueryInfoString(DWORD flags, void** buffer, DWORD* len) {
-    if ((flags | HTTP_QUERY_FLAG_NUMBER) ||
-        (flags | HTTP_QUERY_FLAG_REQUEST_HEADERS) ||
-        (flags | HTTP_QUERY_FLAG_SYSTEMTIME)) {
+    if ((flags & HTTP_QUERY_FLAG_NUMBER) ||
+        (flags & HTTP_QUERY_FLAG_REQUEST_HEADERS) ||
+        (flags & HTTP_QUERY_FLAG_SYSTEMTIME)) {
       return false;
     }
     bool result = true;
