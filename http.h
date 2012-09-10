@@ -7,6 +7,8 @@
 #ifndef ULT_HTTP_H_
 #define ULT_HTTP_H_
 
+#include "number.h"
+#include "file-io.h"
 #include <string>
 #include <windows.h>
 #include <Wininet.h>
@@ -14,6 +16,18 @@
 #pragma comment(lib, "Wininet.lib")
 
 namespace ult {
+
+namespace HttpStatus {
+  enum {
+    kSuccess           = 0,
+    kConnecting        = 1,
+    kDownloading       = 2,
+    kConnectFailure    = 3,
+    kDownloadFailure   = 4,
+    kCreateFileFailure = 5,
+    kWriteFileFailure  = 6,
+  };
+}
   
 typedef void (*PHttpStringHandle)(
     int status,
@@ -22,7 +36,7 @@ typedef void (*PHttpStringHandle)(
 typedef void (*PHttpFileHandle)(
     int status,
     int progress,
-    const std::wstring& filename);
+    const std::wstring& file_path);
 
 class Http {
 
@@ -42,30 +56,125 @@ public:
   }
 
   Http(void) :
-      handle_opened_(false) {
+      handle_opened_(false),
+      HttpStringHandle_(NULL),
+      HttpFileHandle_(NULL) {
   }
   ~Http(void) {
     CloseHandles();
   }
 
   bool DownloadString(const std::wstring& url, PHttpStringHandle HttpStringHandle) {
+    HttpStringHandle_ = HttpStringHandle;
+    CallStringHandle(HttpStatus::kConnecting, -1, "");
     OpenHandles(url);
-    ReadData(NULL);
     DWORD status;
-    DWORD len;
-    DWORD range;
-    DWORD size;
-    QueryInfoNumber(HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status, &size);
-    QueryInfoNumber(HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &len, &size);
-    QueryInfoNumber(HTTP_QUERY_CONTENT_RANGE | HTTP_QUERY_FLAG_NUMBER, &range, &size);
-    void* buf;
-    QueryInfoString(HTTP_QUERY_CONTENT_RANGE, &buf, &size);
-    QueryInfoString(HTTP_QUERY_CONTENT_TRANSFER_ENCODING, &buf, &size);
-    return false;
+    DWORD contentlen;
+    QueryInfoNumber(HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status);
+    if (status >= 400) {
+      CallStringHandle(HttpStatus::kConnectFailure, -1, "");
+      return false;
+    }
+    if (!QueryInfoNumber(HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &contentlen)) {
+      contentlen = 0;
+    }
+    DWORD dwsize = 0;
+    DWORD dwread = 0;
+    char* buf = NULL;
+    std::string str;
+    int progress;
+    while (true) {
+      if (0 == InternetQueryDataAvailable(hopenurl_, &dwsize, 0, 0)) {
+        break;
+      }
+      if (dwsize <= 0) {
+        break;
+      }
+      buf = new char[dwsize];
+      if (InternetReadFile(hopenurl_, buf, dwsize, &dwread)) {
+        str.append(buf, dwread);
+        DWORD dl = str.length();
+        if (contentlen > 0) {
+          progress = static_cast<int>(ult::UIntMultDiv(str.length(), 100, contentlen));
+        } else {
+          progress = 0;
+        }
+        CallStringHandle(HttpStatus::kDownloading, progress, "");
+      }
+      delete[] buf;
+    } //while
+    if (contentlen > 0) {
+      if (str.length() == contentlen) {
+        CallStringHandle(HttpStatus::kSuccess, progress, str);
+      } else {
+        CallStringHandle(HttpStatus::kDownloadFailure, progress, str);
+        return false;
+      }
+    } else {
+      CallStringHandle(HttpStatus::kSuccess, 100, str);
+    }
+    return true;
   }
 
-  bool DownloadFile(const std::wstring& url, const std::wstring& file_pat, PHttpFileHandle HttpfileHandle) {
-    return false;
+  bool DownloadFile(const std::wstring& url, const std::wstring& file_path, PHttpFileHandle HttpFileHandle) {
+    HttpFileHandle_ = HttpFileHandle;
+    CallFileHandle(HttpStatus::kConnecting, -1, L"");
+    OpenHandles(url);
+    DWORD status;
+    DWORD contentlen;
+    QueryInfoNumber(HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status);
+    if (status >= 400) {
+      CallFileHandle(HttpStatus::kConnectFailure, -1, L"");
+      return false;
+    } 
+    ult::File down_file;
+    if (!down_file.Create(file_path, true)) {
+      CallFileHandle(HttpStatus::kCreateFileFailure, -1, file_path);
+      return false;
+    }
+    if (!QueryInfoNumber(HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &contentlen)) {
+      contentlen = 0;
+    }
+    DWORD dwsize = 0;
+    DWORD dwread = 0;
+    DWORD readtotal = 0;
+    DWORD dwwrite = 0;
+    char* buf = NULL;
+    int progress = -1;
+    bool result = true;
+    while (true) {
+      if (0 == InternetQueryDataAvailable(hopenurl_, &dwsize, 0, 0)) {
+        break;
+      }
+      if (dwsize <= 0) {
+        break;
+      }
+      buf = new char[dwsize];
+      if (InternetReadFile(hopenurl_, buf, dwsize, &dwread)) {
+        if (!down_file.Write(buf, dwread, &dwwrite)) {
+          CallFileHandle(HttpStatus::kWriteFileFailure, progress, file_path);
+          return false;
+        }
+        if (contentlen > 0) {
+          progress = static_cast<int>(ult::UIntMultDiv(down_file.GetSize(), 100, contentlen));
+        } else {
+          progress = 0;
+        }
+        CallFileHandle(HttpStatus::kDownloading, progress, file_path);
+      }
+      delete[] buf;
+    } //while
+    if (contentlen > 0) {
+      if (down_file.GetSize() == contentlen) {
+        CallFileHandle(HttpStatus::kSuccess, progress, file_path);
+      } else {
+        CallFileHandle(HttpStatus::kDownloadFailure, progress, file_path);
+        return false;
+      }
+    } else {
+      CallFileHandle(HttpStatus::kSuccess, 100, file_path);
+    }
+    return true;
   }
 
 private:
@@ -77,7 +186,7 @@ private:
       std::wstring curl;
       CanonicalizeUrl(url, &curl);
       hopenurl_ = InternetOpenUrl(hopen_, curl.c_str(), NULL, 0,
-        INTERNET_FLAG_NO_UI | INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_NO_CACHE_WRITE, 0);
+          INTERNET_FLAG_NO_UI | INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_NO_CACHE_WRITE, 0);
     }
 
     if (hopenurl_ != NULL) {
@@ -100,15 +209,15 @@ private:
     return ret1 && ret2;
   }
 
-  bool QueryInfoNumber(DWORD flags, DWORD* num, DWORD* size) {
+  bool QueryInfoNumber(DWORD flags, DWORD* num) {
     if (!(flags & HTTP_QUERY_FLAG_NUMBER)) {
       return false;
     }
-    *size = sizeof (*num);
-    return 0 != HttpQueryInfo(hopenurl_, flags, num, size, NULL);
+    DWORD size;
+    return 0 != HttpQueryInfo(hopenurl_, flags, num, &size, NULL);
   }
 
-  bool QueryInfoString(DWORD flags, void** buffer, DWORD* len) {
+  bool QueryInfoString(DWORD flags, std::wstring* str) {
     if ((flags & HTTP_QUERY_FLAG_NUMBER) ||
         (flags & HTTP_QUERY_FLAG_REQUEST_HEADERS) ||
         (flags & HTTP_QUERY_FLAG_SYSTEMTIME)) {
@@ -118,7 +227,9 @@ private:
     void* buf = NULL;
     DWORD size = 0;
     while (true) {
-      if(0 == HttpQueryInfo(hopenurl_, flags, (LPVOID)buf, &size, NULL)) {
+      if(0 != HttpQueryInfo(hopenurl_, flags, (LPVOID)buf, &size, NULL)) {
+        break;
+      } else {
         if (GetLastError() == ERROR_HTTP_HEADER_NOT_FOUND) {
           // Code to handle the case where the header isn't available.
           break;
@@ -142,187 +253,31 @@ private:
     } //while
 
     if (result) {
-      *buffer = buf;
-      *len = size;
+      str->assign((wchar_t*)buf, size / sizeof (wchar_t));
     }
     return result;
   }
 
-  bool ReadData(void (*Http::ContentHandle)(void* buffer, DWORD len)) {
-    DWORD dwsize = 0;
-    DWORD dwread = 0;
-    char* buf = NULL;
-    while (true) {
-      if (0 == InternetQueryDataAvailable(hopenurl_, &dwsize, 0, 0)) {
-        break;
-      }
-      if (dwsize <= 0) {
-        break;
-      }
-      buf = new char[dwsize];
-      if (InternetReadFile(hopenurl_, buf, dwsize, &dwread)) {
-        if (ContentHandle != NULL) {
-          ContentHandle(buf, dwread);
-        }
-      }
-      delete[] buf;
+  void CallStringHandle(int status, int progress, const std::string& content) {
+    if (HttpStringHandle_ != NULL) {
+      HttpStringHandle_(status, progress, content);
     }
-    return true;
+  }
+
+  void CallFileHandle(int status, int progress, const std::wstring& file_path) {
+    if (HttpFileHandle_ != NULL) {
+      HttpFileHandle_(status, progress, file_path);
+    }
   }
 
   //private variable
   HINTERNET hopen_;
   HINTERNET hopenurl_;
   bool handle_opened_;
+  PHttpStringHandle HttpStringHandle_;
+  PHttpFileHandle HttpFileHandle_;
 
-};
-
-namespace http {
-
-inline bool InitInternetHandle(const std::wstring& url,
-                               HINTERNET* phopen,
-                               HINTERNET* phopenurl) {
-  bool init_result = false;
-  *phopen = NULL;
-  *phopenurl = NULL;
-
-  HINTERNET hopen = NULL;
-  HINTERNET hopenurl = NULL;
-
-  hopen = InternetOpen(NULL, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
-  if (hopen != NULL) {
-    *phopen = hopen;
-    DWORD len =5;
-    wchar_t ch;
-    wchar_t *buf = NULL;
-    InternetCanonicalizeUrl(url.c_str(), &ch, &len, ICU_BROWSER_MODE);
-    buf = new wchar_t[len];
-    InternetCanonicalizeUrl(url.c_str(), buf, &len, ICU_BROWSER_MODE);
-    hopenurl = InternetOpenUrl(hopen, buf, NULL, 0,
-      INTERNET_FLAG_NO_UI | INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_NO_CACHE_WRITE, 0);
-    delete[] buf;
-  }
-
-  if (hopenurl != NULL) {
-    *phopenurl = hopenurl;
-    init_result = true;
-  }
-
-  return init_result;
-}
-
-} //namespace http
-
-inline bool HttpDownloadString(const std::wstring& url, std::string* content) {
-  HINTERNET hopen = NULL;
-  HINTERNET hopenurl = NULL;
-  DWORD dwsize = 0;
-  DWORD dwdownloaded = 0;
-  char* buf = NULL;
-  bool result = false;
-
-  http::InitInternetHandle(url, &hopen, &hopenurl);
-  void* buffer = NULL;
-  DWORD buf_size = 0;
-  while (true) {
-    DWORD status;
-    DWORD l = sizeof (status);
-    HttpQueryInfo(hopenurl, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER,
-      &status, &l, NULL);
-    if (GetLastError() == ERROR_HTTP_HEADER_NOT_FOUND) {
-      // Code to handle the case where the header isn't available.
-      //return true;
-      break;
-    } else {
-      // Check for an insufficient buffer.
-      if (GetLastError()==ERROR_INSUFFICIENT_BUFFER) {
-        // Allocate the necessary buffer.
-        buffer = new char[buf_size];
-
-        // Retry the call.
-        continue;
-      } else {
-        // Error handling code.
-        break;
-      }
-    }
-  } //while
-
-  if (buffer != NULL) {
-    delete[] buffer;
-  }
-
-  if (hopenurl != NULL) {
-    content->clear();
-    do {
-      dwsize = 0;
-      if (!InternetQueryDataAvailable(hopenurl, &dwsize, 0, 0)) {
-        break;
-      }
-      buf = new char[dwsize+1];
-      memset(buf, 0, dwsize+1);
-      if (InternetReadFile(hopenurl, buf, dwsize, &dwdownloaded)) {
-        content->append(buf, dwdownloaded);
-        result = true;
-      }
-      delete[] buf;
-    } while (dwsize > 0);
-  }
-  if (hopen != NULL) {
-    InternetCloseHandle(hopen);
-  }
-  if (hopenurl != NULL) {
-    InternetCloseHandle(hopenurl);
-  }
-  return result;
-}
-
-inline bool HttpDownloadFile(const std::wstring& url, const std::wstring& file_name) {
-  HINTERNET hopen = NULL;
-  HINTERNET hopenurl = NULL;
-  HANDLE hfile = NULL;
-  DWORD dwsize = 0;
-  DWORD dwdownloaded = 0;
-  DWORD dwwrited = 0;
-  char* buf = NULL;
-  bool result = false;
-
-  http::InitInternetHandle(url, &hopen, &hopenurl);
-
-  if (hopenurl != NULL) {
-    hfile = CreateFile(file_name.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL,
-      CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    do {
-      if (hfile == INVALID_HANDLE_VALUE) {
-        break;
-      }
-      dwsize = 0;
-      if (!InternetQueryDataAvailable(hopenurl, &dwsize, 0, 0)) {
-        break;
-      }
-      buf = new char[dwsize+1];
-      memset(buf, 0, dwsize+1);
-      if (InternetReadFile(hopenurl, buf, dwsize, &dwdownloaded)) {
-        if (0 == WriteFile(hfile, buf, dwdownloaded, &dwwrited, NULL)) {
-          result = false;
-          break;
-        }
-        result = true;
-      }
-      delete[] buf;
-    } while (dwsize > 0);
-  }
-  if (hopen != NULL) {
-    InternetCloseHandle(hopen);
-  }
-  if (hopenurl != NULL) {
-    InternetCloseHandle(hopenurl);
-  }
-  if (hfile != NULL) {
-    CloseHandle(hfile);
-  }
-  return result;
-}
+}; // class Http
 
 } // namespace ult
 
