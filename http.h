@@ -38,6 +38,10 @@ typedef void (*PHttpFileHandle)(
     int progress,
     const std::wstring& file_path);
 
+struct IHttpCallback {
+  virtual void HttpHandle(int status, int progress, const std::string& content) = 0;
+};
+
 class Http {
 
 public:
@@ -57,22 +61,21 @@ public:
 
   Http(void) :
       handle_opened_(false),
-      HttpStringHandle_(NULL),
-      HttpFileHandle_(NULL) {
+      http_callback_(NULL) {
   }
   ~Http(void) {
     CloseHandles();
   }
 
-  bool DownloadString(const std::wstring& url, PHttpStringHandle HttpStringHandle) {
-    HttpStringHandle_ = HttpStringHandle;
-    CallStringHandle(HttpStatus::kConnecting, -1, "");
+  bool DownloadString(const std::wstring& url, IHttpCallback* http_callback) {
+    http_callback_ = http_callback;
+    CallHttpHandle(HttpStatus::kConnecting, -1, "");
     OpenHandles(url);
     DWORD status;
     DWORD contentlen;
     QueryInfoNumber(HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status);
     if (status >= 400) {
-      CallStringHandle(HttpStatus::kConnectFailure, -1, "");
+      CallHttpHandle(HttpStatus::kConnectFailure, -1, "");
       return false;
     }
     if (!QueryInfoNumber(HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &contentlen)) {
@@ -99,37 +102,37 @@ public:
         } else {
           progress = 0;
         }
-        CallStringHandle(HttpStatus::kDownloading, progress, "");
+        CallHttpHandle(HttpStatus::kDownloading, progress, "");
       }
       delete[] buf;
     } //while
     if (contentlen > 0) {
       if (str.length() == contentlen) {
-        CallStringHandle(HttpStatus::kSuccess, progress, str);
+        CallHttpHandle(HttpStatus::kSuccess, progress, str);
       } else {
-        CallStringHandle(HttpStatus::kDownloadFailure, progress, str);
+        CallHttpHandle(HttpStatus::kDownloadFailure, progress, str);
         return false;
       }
     } else {
-      CallStringHandle(HttpStatus::kSuccess, 100, str);
+      CallHttpHandle(HttpStatus::kSuccess, 100, str);
     }
     return true;
   }
 
-  bool DownloadFile(const std::wstring& url, const std::wstring& file_path, PHttpFileHandle HttpFileHandle) {
-    HttpFileHandle_ = HttpFileHandle;
-    CallFileHandle(HttpStatus::kConnecting, -1, L"");
+  bool DownloadFile(const std::wstring& url, const std::wstring& file_path, IHttpCallback* http_callback) {
+    http_callback_ = http_callback;
+    CallHttpHandle(HttpStatus::kConnecting, -1, "");
     OpenHandles(url);
     DWORD status;
     DWORD contentlen;
     QueryInfoNumber(HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status);
     if (status >= 400) {
-      CallFileHandle(HttpStatus::kConnectFailure, -1, L"");
+      CallHttpHandle(HttpStatus::kConnectFailure, -1, "");
       return false;
     } 
     ult::File down_file;
     if (!down_file.Create(file_path, true)) {
-      CallFileHandle(HttpStatus::kCreateFileFailure, -1, file_path);
+      CallHttpHandle(HttpStatus::kCreateFileFailure, -1, "");
       return false;
     }
     if (!QueryInfoNumber(HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, &contentlen)) {
@@ -152,7 +155,7 @@ public:
       buf = new char[dwsize];
       if (InternetReadFile(hopenurl_, buf, dwsize, &dwread)) {
         if (!down_file.Write(buf, dwread, &dwwrite)) {
-          CallFileHandle(HttpStatus::kWriteFileFailure, progress, file_path);
+          CallHttpHandle(HttpStatus::kWriteFileFailure, progress, "");
           return false;
         }
         if (contentlen > 0) {
@@ -160,19 +163,19 @@ public:
         } else {
           progress = 0;
         }
-        CallFileHandle(HttpStatus::kDownloading, progress, file_path);
+        CallHttpHandle(HttpStatus::kDownloading, progress, "");
       }
       delete[] buf;
     } //while
     if (contentlen > 0) {
       if (down_file.GetSize() == contentlen) {
-        CallFileHandle(HttpStatus::kSuccess, progress, file_path);
+        CallHttpHandle(HttpStatus::kSuccess, progress, "");
       } else {
-        CallFileHandle(HttpStatus::kDownloadFailure, progress, file_path);
+        CallHttpHandle(HttpStatus::kDownloadFailure, progress, "");
         return false;
       }
     } else {
-      CallFileHandle(HttpStatus::kSuccess, 100, file_path);
+      CallHttpHandle(HttpStatus::kSuccess, 100, "");
     }
     return true;
   }
@@ -258,15 +261,9 @@ private:
     return result;
   }
 
-  void CallStringHandle(int status, int progress, const std::string& content) {
-    if (HttpStringHandle_ != NULL) {
-      HttpStringHandle_(status, progress, content);
-    }
-  }
-
-  void CallFileHandle(int status, int progress, const std::wstring& file_path) {
-    if (HttpFileHandle_ != NULL) {
-      HttpFileHandle_(status, progress, file_path);
+  void CallHttpHandle(int status, int progress, const std::string& content) {
+    if (http_callback_ != NULL) {
+      http_callback_->HttpHandle(status, progress, content);
     }
   }
 
@@ -274,8 +271,7 @@ private:
   HINTERNET hopen_;
   HINTERNET hopenurl_;
   bool handle_opened_;
-  PHttpStringHandle HttpStringHandle_;
-  PHttpFileHandle HttpFileHandle_;
+  IHttpCallback* http_callback_;
 
 }; // class Http
 
