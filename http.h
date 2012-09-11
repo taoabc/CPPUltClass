@@ -28,15 +28,6 @@ namespace HttpStatus {
     kWriteFileFailure  = 6,
   };
 }
-  
-typedef void (*PHttpStringHandle)(
-    int status,
-    int progress,
-    const std::string& content);
-typedef void (*PHttpFileHandle)(
-    int status,
-    int progress,
-    const std::wstring& file_path);
 
 struct IHttpCallback {
   virtual void HttpHandle(int status, int progress, const std::string& content) = 0;
@@ -67,10 +58,12 @@ public:
     CloseHandles();
   }
 
-  bool DownloadString(const std::wstring& url, IHttpCallback* http_callback) {
+  bool DownloadString(const std::wstring& url, IHttpCallback* http_callback, unsigned timeout = 0) {
     http_callback_ = http_callback;
     CallHttpHandle(HttpStatus::kConnecting, -1, "");
-    OpenHandles(url);
+    if (!OpenHandles(url, timeout)) {
+      return false;
+    }
     DWORD status;
     DWORD contentlen;
     QueryInfoNumber(HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status);
@@ -119,10 +112,13 @@ public:
     return true;
   }
 
-  bool DownloadFile(const std::wstring& url, const std::wstring& file_path, IHttpCallback* http_callback) {
+  bool DownloadFile(const std::wstring& url, const std::wstring& file_path,
+                    IHttpCallback* http_callback, unsigned timeout = 0) {
     http_callback_ = http_callback;
     CallHttpHandle(HttpStatus::kConnecting, -1, "");
-    OpenHandles(url);
+    if (!OpenHandles(url, timeout)) {
+      return false;
+    }
     DWORD status;
     DWORD contentlen;
     QueryInfoNumber(HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status);
@@ -183,11 +179,14 @@ public:
 private:
 
   //private functions
-  bool OpenHandles(const std::wstring& url) {
+  bool OpenHandles(const std::wstring& url, unsigned timeout) {
     hopen_ = InternetOpen(NULL, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (hopen_ != NULL) {
       std::wstring curl;
       CanonicalizeUrl(url, &curl);
+      if (timeout > 0) {
+        InternetSetOption(hopen_, INTERNET_OPTION_CONNECT_TIMEOUT, (LPVOID)&timeout, sizeof (timeout));
+      }
       hopenurl_ = InternetOpenUrl(hopen_, curl.c_str(), NULL, 0,
           INTERNET_FLAG_NO_UI | INTERNET_FLAG_PRAGMA_NOCACHE | INTERNET_FLAG_NO_CACHE_WRITE, 0);
     }
