@@ -165,12 +165,14 @@ public:
     } //while
     if (contentlen > 0) {
       if (down_file.GetSize() == contentlen) {
+        down_file.Close();
         CallHttpHandle(HttpStatus::kSuccess, progress, "");
       } else {
         CallHttpHandle(HttpStatus::kDownloadFailure, progress, "");
         return false;
       }
     } else {
+      down_file.Close();
       CallHttpHandle(HttpStatus::kSuccess, 100, "");
     }
     return true;
