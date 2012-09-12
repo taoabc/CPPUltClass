@@ -93,14 +93,18 @@ inline std::string Utf8ToAnsi(const std::string& src) {
 inline bool SplitString(const std::wstring& src,
                         const std::wstring& separator,
                         std::vector<std::wstring>* vec ) {
-  if (src.empty() || separator.empty()) {
+  if (src.empty()) {
     return false;
+  }
+  vec->clear();
+  if (separator.empty()) {
+    vec->push_back(src);
+    return true;
   }
   int pos;
   std::wstring tmp(src);
   std::wstring item;
   int separator_len = separator.length();
-  vec->clear();
   while ((pos = tmp.find(separator)) >= 0) {
     item = tmp.substr(0, pos);
     if (!item.empty()) {
