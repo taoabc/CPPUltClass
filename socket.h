@@ -114,6 +114,7 @@ public:
   }
 
   int SendTo(const char* data, int len, const char* host, u_short port, unsigned millisec = 0) {
+    Close();
     socket_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
     sockaddr_in addr;
     addr.sin_family = AF_INET;
@@ -134,16 +135,16 @@ public:
     return sended;
   }
 
-  int RecvFrom(char* data, int len, unsigned millisec = 0) {
+  int RecvFrom(char* buffer, int len, unsigned millisec = 0) {
     sockaddr_in send_addr;
     int send_addr_size = sizeof (send_addr);
     if (millisec > 0) {
       setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, (char*)&millisec, sizeof (millisec));
     }
-    return recvfrom(socket_, data, len, 0, (sockaddr*)&send_addr, &send_addr_size);
+    return recvfrom(socket_, buffer, len, 0, (sockaddr*)&send_addr, &send_addr_size);
   }
 
-  int RecvFrom(char* data, int len, u_short port) {
+  int RecvFrom(char* buffer, int len, u_short port, unsigned millisec = 0) {
     SOCKET recv_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
     sockaddr_in recv_addr;
     recv_addr.sin_family = AF_INET;
@@ -152,7 +153,10 @@ public:
     bind(recv_socket, (sockaddr*)&recv_socket, sizeof (recv_addr));
     sockaddr_in send_addr;
     int send_addr_size = sizeof (send_addr);
-    int recv_len = recvfrom(recv_socket, data, len, 0, (sockaddr*)&send_addr, &send_addr_size);
+    if (millisec > 0) {
+      setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, (char*)&millisec, sizeof (millisec));
+    }
+    int recv_len = recvfrom(recv_socket, buffer, len, 0, (sockaddr*)&send_addr, &send_addr_size);
     closesocket(recv_socket);
     return recv_len;
   }
