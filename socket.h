@@ -87,7 +87,7 @@ public:
   }
 
   int Close(void) {
-    int result;
+    int result = 0;
     if (socket_ != NULL) {
       result = closesocket(socket_);
     }
@@ -162,7 +162,7 @@ public:
   }
 
   int Close(void) {
-    int result;
+    int result = 0;
     if (socket_ != NULL) {
       result = closesocket(socket_);
     }
