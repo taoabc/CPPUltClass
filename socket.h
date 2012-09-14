@@ -54,13 +54,38 @@ public:
     Close();
   }
 
-  int Connect(const char* host, u_short port) {
+  int Connect(const char* host, u_short port, unsigned millisec = 0) {
     socket_ = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
     sockaddr_in addr;
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = Host2InetAddr(host);
     addr.sin_port = htons(port);
-    return connect(socket_, (sockaddr*)&addr, sizeof (addr));
+    if (millisec == 0) {
+      return connect(socket_, (sockaddr*)&addr, sizeof (addr));
+    }
+    //if set timeout
+    fd_set set;
+    u_long ul = 1;
+    ioctlsocket(socket_, FIONBIO, &ul);
+    int result = SOCKET_ERROR;
+    if (SOCKET_ERROR == connect(socket_, (sockaddr*)&addr, sizeof (addr))) {
+      timeval tm;
+      tm.tv_sec = millisec / 1000;
+      tm.tv_usec = (millisec % 1000) * 1000;
+      FD_ZERO(&set);
+      FD_SET(socket_, &set);
+      if (0 < select(socket_+1, NULL, &set, NULL, &tm)) {
+        int error = SOCKET_ERROR;
+        int len = sizeof (error);
+        getsockopt(socket_, SOL_SOCKET, SO_ERROR, (char*)&error, &len);
+        if (error == 0) {
+          result = 0;
+        }
+      }
+    }
+    ul = 0;
+    ioctlsocket(socket_, FIONBIO, &ul);
+    return result;
   }
 
   int Send(const char* data, int len, unsigned millisec = 0) {
