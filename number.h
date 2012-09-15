@@ -8,34 +8,28 @@
 
 #include <ctime>
 #include <vector>
+#include <cstdlib>
+#include <algorithm>
 
 namespace ult {
-
-inline void SwapInteger(int* x, int *y) {
-  if (*x != *y) {
-    *x = *x ^ *y;
-    *y = *x ^ *y;
-    *x = *x ^ *y;
-  }
-}
 
 //get random from [min_number, max_number)
 inline int GetRandomInteger(int min_number, int max_number) {
   static bool seeded = false;
   if (!seeded) {
-    srand((unsigned int)time(NULL));
+    std::srand((unsigned int)time(NULL));
     seeded = true;
   }
   if (min_number > max_number) {
-    SwapInteger(&min_number, &max_number);
+    std::swap(min_number, max_number);
   }
-  return (int)((double)rand() / (RAND_MAX + 1) * (max_number - min_number) + min_number);
+  return (int)((double)std::rand() / (RAND_MAX + 1) * (max_number - min_number) + min_number);
 }
 
 //dis order number from [begin_number, end_number)
 inline void DisorderInteger(int begin_number, int end_number, std::vector<int>* vec) {
   if (begin_number > end_number) {
-    SwapInteger(&begin_number, &end_number);
+    std::swap(begin_number, end_number);
   }
   for (int i = begin_number; i < end_number; ++i) {
     vec->push_back(i);
@@ -45,7 +39,7 @@ inline void DisorderInteger(int begin_number, int end_number, std::vector<int>* 
   int r;
   for (int i = 0; i < vec_size; ++i) {
     r = GetRandomInteger(0, vec_size);
-    SwapInteger(&(*vec)[i], &(*vec)[r]);
+    std::swap((*vec)[i], (*vec)[r]);
   }
 }
 
@@ -62,6 +56,7 @@ inline void DecreaseVals(unsigned __int64* numberator, unsigned __int64* denomin
 }
 
 //to calculate numberator1*numberator2 / denominator
+//this function resolve really big number multiply
 inline unsigned __int64 UIntMultDiv(unsigned __int64 numberator1,
                                     unsigned __int64 numberator2,
                                     unsigned __int64 denominator) {
