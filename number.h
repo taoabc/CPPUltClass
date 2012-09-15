@@ -56,7 +56,7 @@ inline void DecreaseVals(unsigned __int64* numberator, unsigned __int64* denomin
 }
 
 //to calculate numberator1*numberator2 / denominator
-//this function resolve really big number multiply
+//this function solve really big number multiply
 inline unsigned __int64 UIntMultDiv(unsigned __int64 numberator1,
                                     unsigned __int64 numberator2,
                                     unsigned __int64 denominator) {

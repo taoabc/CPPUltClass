@@ -1,3 +1,8 @@
+/*
+** 同步socket的简单封装
+** author
+**   taoabc@gmail.com
+*/
 #ifndef ULT_SOCKET_H_
 #define ULT_SOCKET_H_
 
