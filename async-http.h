@@ -11,4 +11,16 @@
 
 #pragma comment(lib, "Winhttp.lib")
 
+namespace ult {
+
+class AsyncHttp {
+
+public:
+
+private:
+
+};
+
+} //namespace
+
 #endif
