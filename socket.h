@@ -28,7 +28,7 @@ inline void SocketCleanup(void) {
   WSACleanup();
 }
 
-inline unsigned long Host2InetAddr(const char* raw_host) {
+inline unsigned long HostToInetAddr(const char* raw_host) {
   hostent* phost;
   unsigned long result = inet_addr(raw_host);
   if (result == INADDR_NONE) {
@@ -58,7 +58,7 @@ public:
     socket_ = socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
     sockaddr_in addr;
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = Host2InetAddr(host);
+    addr.sin_addr.s_addr = HostToInetAddr(host);
     addr.sin_port = htons(port);
     if (millisec == 0) {
       return connect(socket_, (sockaddr*)&addr, sizeof (addr));
@@ -143,7 +143,7 @@ public:
     socket_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
     sockaddr_in addr;
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = Host2InetAddr(host);
+    addr.sin_addr.s_addr = HostToInetAddr(host);
     addr.sin_port = htons(port);
     if (millisec > 0) {
       setsockopt(socket_, SOL_SOCKET, SO_SNDTIMEO, (char*)&millisec, sizeof (millisec));
