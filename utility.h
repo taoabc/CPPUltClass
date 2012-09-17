@@ -1,18 +1,29 @@
 #pragma once
-#include <string>
-#include <vector>
+
 #include <windows.h>
 
 namespace ult {
-void DebugPrint(const std::wstring& str);
-void DebugPrint(const std::string& str);
-void DebugPrint(int n);
-bool ReadFileToString(const std::wstring& file, std::string* dest);
-bool RegQueryString(HKEY parent_key, const std::wstring& key_name, const std::wstring& value_name, std::wstring* result);
-bool RegQueryWord(HKEY parent_key, const wchar_t* key_name, const wchar_t* value_name, DWORD* value);
-std::wstring NumberToString(int num);
-DWORD GetShellVersion(void);
-void DisorderInteger(int begin_number, int end_number, std::vector<int>* vec);
-void SwapInteger(int* x, int* y);
-int GetRandomNumber(int min_number, int max_number);
+
+DWORD GetShellVersion(void) {
+  HMODULE hmodule_dll;
+  DWORD dwversion = 0;
+  hmodule_dll = LoadLibrary(L"Shell32.dll");
+  if (NULL != hmodule_dll) {
+    DLLGETVERSIONPROC pfn_dll_get_version;
+    pfn_dll_get_version = (DLLGETVERSIONPROC)GetProcAddress(hmodule_dll, "DllGetVersion");
+    if (NULL != pfn_dll_get_version) {
+      DLLVERSIONINFO dvi;
+      HRESULT hr;
+
+      memset(&dvi, 0, sizeof(dvi));
+      dvi.cbSize = sizeof(dvi);
+      hr = pfn_dll_get_version(&dvi);
+      if (SUCCEEDED(hr)) {
+        dwversion = MAKELONG(dvi.dwMinorVersion, dvi.dwMajorVersion);
+      }
+    }
+    FreeLibrary(hmodule_dll);
+  }
+  return dwversion;
+}
 }

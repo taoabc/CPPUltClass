@@ -3,6 +3,8 @@
 ** author
 **   taoabc@gmail.com
 */
+#ifndef ULT_HANDLE_WAITER_H_
+#define ULT_HANDLE_WAITER_H_
 
 #include <windows.h>
 #include <vector>
@@ -62,3 +64,5 @@ private:
 };
 
 }
+
+#endif

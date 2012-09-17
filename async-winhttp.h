@@ -6,6 +6,8 @@
 #ifndef ULT_ASYNC_WINHTTP_H_
 #define ULT_ASYNC_WINHTTP_H_
 
+#include "handle-base.h"
+
 #include <windows.h>
 #include <winhttp.h>
 
@@ -13,32 +15,12 @@
 
 namespace ult{
 
-class WinHttpHandle {
+class WinHttpHandle : public HandleBase<HINTERNET> {
 
 public:
 
-  WinHttpHandle(void) :
-      handle_(NULL) {
-  }
-
   ~WinHttpHandle(void) {
     Close();
-  }
-
-  operator HINTERNET() const {
-    return handle_;
-  }
-
-  bool Attach(HINTERNET handle) {
-    Close();
-    handle_ = handle;
-    return handle_ != NULL;
-  }
-
-  HINTERNET Detach(void) {
-    HINTERNET h = handle_;
-    handle_ = NULL;
-    return h;
   }
 
   void Close(void) {
@@ -48,7 +30,7 @@ public:
     }
   }
 
-  HINTERNET GetHandle(void) const {
+  operator HINTERNET() const {
     return handle_;
   }
 
@@ -65,48 +47,70 @@ public:
     }
     return S_OK;
   }
-
-private:
-
-  HINTERNET handle_;
 }; //class WinHttpHandle
 
-class WinHttpSession : public WinHttpHandle {
+class WinHttpSession {
 
 public:
 
   HRESULT Initialize(void) {
-    if (!Attach(::WinHttpOpen(NULL, WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME,
+    if (!handle_.Attach(::WinHttpOpen(NULL, WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME,
         WINHTTP_NO_PROXY_BYPASS, WINHTTP_FLAG_ASYNC))) {
       return HRESULT_FROM_WIN32(::GetLastError());
     }
     return S_OK;
   }
+
+  HINTERNET GetHandle(void) const {
+    return handle_.GetHandle();
+  }
+
+private:
+
+  WinHttpHandle handle_;
 }; //class WinHttpSession
 
-class WinHttpConnection : public WinHttpHandle {
+class WinHttpConnection {
 
 public:
 
   HRESULT Initialize(HINTERNET session, const wchar_t* server, unsigned short port) {
-    if (!Attach(::WinHttpConnect(session, server, port, 0))) {
+    if (!handle_.Attach(::WinHttpConnect(session, server, port, 0))) {
       return HRESULT_FROM_WIN32(::GetLastError());
     }
     return S_OK;
   }
+
+  HINTERNET GetHandle(void) const {
+    return handle_.GetHandle();
+  }
+
+private:
+
+  WinHttpHandle handle_;
 }; //class WinHttpConnection
 
-class WinHttpRequest : public WinHttpHandle {
+class WinHttpRequest {
 
 public:
 
-  HRESULT Initialize(HINTERNET connection, const wchar_t* verb, const wchar_t* path, bool secure = false) {
-    DWORD flag = secure ? WINHTTP_FLAG_SECURE : 0;
-    if (!Attach(::WinHttpOpenRequest(connection, verb, path, NULL, WINHTTP_NO_REFERER,
+  WinHttpRequest(void) {
+    buffer = new char[kBufferLength];
+  }
+
+  ~WinHttpRequest(void) {
+    if (buffer != NULL) {
+      delete[] buffer;
+    }
+  }
+
+  HRESULT Initialize(HINTERNET connection, const wchar_t* verb, const wchar_t* path, int scheme = INTERNET_SCHEME_HTTP) {
+    DWORD flag = (scheme == INTERNET_SCHEME_HTTPS) ? WINHTTP_FLAG_SECURE : 0;
+    if (!handle_.Attach(::WinHttpOpenRequest(connection, verb, path, NULL, WINHTTP_NO_REFERER,
          WINHTTP_DEFAULT_ACCEPT_TYPES, flag))) {
       return HRESULT_FROM_WIN32(::GetLastError());
     }
-    if (WINHTTP_INVALID_STATUS_CALLBACK == ::WinHttpSetStatusCallback(GetHandle(), Callback,
+    if (WINHTTP_INVALID_STATUS_CALLBACK == ::WinHttpSetStatusCallback(handle_, Callback,
         WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS, NULL)) {
       return HRESULT_FROM_WIN32(::GetLastError());
     }
@@ -114,21 +118,102 @@ public:
   }
 
   HRESULT SendRequest(const wchar_t* headers, DWORD headers_len, const void* optional, DWORD optional_len, DWORD total_len) {
-    
+    if (FALSE == ::WinHttpSendRequest(handle_, headers, headers_len,
+        const_cast<void*>(optional), optional_len, total_len, reinterpret_cast<DWORD_PTR>(this))) {
+      return HRESULT_FROM_WIN32(::GetLastError());
+    }
+    return S_OK;
   }
 
 protected:
 
   virtual HRESULT OnCallback(DWORD code, const void* info, DWORD length) {
+    return S_OK;
+  }
+
+  virtual HRESULT OnReadComplete(const void* info, DWORD length) {
+    return S_OK;
+  }
+
+  virtual HRESULT OnResponseComplete(HRESULT hr) {
+    return S_OK;
   }
 
 private:
 
   static void CALLBACK Callback(HINTERNET handle, DWORD_PTR context, DWORD code, void* info, DWORD length) {
     WinHttpRequest* pthis = (WinHttpRequest*)context;
-    pthis->OnCallback(code, info, length);
+    HRESULT hr = pthis->OnBaseCallback(code, info, length);
+    if (FAILED(hr)) {
+      pthis->OnResponseComplete(hr);
+    }
   }
-};
+
+  HRESULT OnBaseCallback(DWORD code, const void* info, DWORD length) {
+    switch (code) {
+    case WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE:
+    case WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE:
+      if (FALSE == ::WinHttpReceiveResponse(handle_, NULL)) {
+        return HRESULT_FROM_WIN32(::GetLastError());
+      }
+      break;
+    case WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE: 
+      {
+        DWORD status;
+        DWORD len = sizeof (status);
+        if (FALSE == ::WinHttpQueryHeaders(handle_, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+            WINHTTP_HEADER_NAME_BY_INDEX, &status, &len, WINHTTP_NO_HEADER_INDEX)) {
+          return HRESULT_FROM_WIN32(::GetLastError());
+        }
+        if (status != HTTP_STATUS_OK) {
+          return E_FAIL;
+        }
+        if (S_OK != QueryDataAvailable()) {
+          return E_FAIL;
+        }
+      }
+      break;
+    case WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE:
+      {
+        DWORD size = *(reinterpret_cast<const DWORD*>(info));
+        if (size > 0) {
+          if (FALSE == ::WinHttpReadData(handle_, buffer, kBufferLength, NULL)) {
+            return HRESULT_FROM_WIN32(::GetLastError());
+          }
+        } else if (size == 0) {
+          OnResponseComplete(S_OK);
+        }
+      }
+      break;
+    case WINHTTP_CALLBACK_STATUS_READ_COMPLETE:
+      if (length > 0) {
+        OnReadComplete(info, length);
+        QueryDataAvailable();
+      }
+      break;
+    case WINHTTP_CALLBACK_STATUS_REQUEST_ERROR:
+      OnResponseComplete(HRESULT_FROM_WIN32(::GetLastError()));
+      break;
+    default:
+      return OnCallback(code, info, length);
+      break;
+    }
+  }
+
+  HRESULT QueryDataAvailable(void) {
+    if (FALSE == ::WinHttpQueryDataAvailable(handle_, NULL)) {
+      return HRESULT_FROM_WIN32(::GetLastError());
+    }
+    return S_OK;
+  }
+
+  WinHttpHandle handle_;
+  void* buffer;
+
+  enum {
+    kBufferLength = 8 * 1024,
+  };
+}; //class WinHttpRequest
 
 } //namespace ult
 
