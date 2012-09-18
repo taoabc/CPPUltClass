@@ -90,6 +90,19 @@ private:
 
   WinHttpHandle handle_;
 }; //class WinHttpConnection
+
+inline bool UltWinHttpCrackUrl(const wchar_t* url, URL_COMPONENTS* uc) {
+  memset(uc, 0, sizeof (*uc));
+  uc->dwExtraInfoLength = -1;
+  uc->dwHostNameLength = -1;
+  uc->dwPasswordLength = -1;
+  uc->dwSchemeLength = -1;
+  uc->dwStructSize = sizeof (*uc);
+  uc->dwUrlPathLength = -1;
+  uc->dwUserNameLength = -1;
+  return (TRUE == ::WinHttpCrackUrl(url, 0, 0, uc));
+}
+
 } //namespace ult
 
 #endif

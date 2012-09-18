@@ -3,8 +3,8 @@
 ** author
 **   taoabc@gmail.com
 */
-#ifndef ULT_NET_SYNCWINHTTP_H_
-#define ULT_NET_SYNCWINHTTP_H_
+#ifndef ULT_NET_SYNCWINHTTPREQUEST_H_
+#define ULT_NET_SYNCWINHTTPREQUEST_H_
 
 #include "./winhttp-foundation.h"
 
