@@ -38,38 +38,12 @@ public:
         const_cast<void*>(optional), optional_len, total_len, reinterpret_cast<DWORD_PTR>(this))) {
       return HRESULT_FROM_WIN32(::GetLastError());
     }
-    if (total_len <= optional_len) {
-      return RecieveResponse();
-    }
     return S_OK;
   }
 
   HRESULT WriteData(const void* data, DWORD length) {
     DWORD write;
     if (FALSE == ::WinHttpWriteData(handle_, data, length, &write)) {
-      return HRESULT_FROM_WIN32(::GetLastError());
-    }
-    return RecieveResponse();
-  }
-
-protected:
-
-  virtual HRESULT OnContentLength(DWORD length) {
-    return S_OK;
-  }
-
-  virtual HRESULT OnReadComplete(const void* info, DWORD length) {
-    return S_OK;
-  }
-
-  virtual HRESULT OnResponseComplete(HRESULT hr) {
-    return S_OK;
-  }
-
-private:  
-
-  HRESULT QueryDataAvailable(void) {
-    if (FALSE == ::WinHttpQueryDataAvailable(handle_, &avaiable_size_)) {
       return HRESULT_FROM_WIN32(::GetLastError());
     }
     return S_OK;
@@ -106,7 +80,26 @@ private:
       }
       OnReadComplete(buffer_, read);
     }
-    return OnResponseComplete(S_OK);
+    return S_OK;
+  }
+
+protected:
+
+  virtual HRESULT OnContentLength(DWORD length) {
+    return S_OK;
+  }
+
+  virtual HRESULT OnReadComplete(const void* info, DWORD length) {
+    return S_OK;
+  }
+
+private:
+
+  HRESULT QueryDataAvailable(void) {
+    if (FALSE == ::WinHttpQueryDataAvailable(handle_, &avaiable_size_)) {
+      return HRESULT_FROM_WIN32(::GetLastError());
+    }
+    return S_OK;
   }
 
   WinHttpHandle handle_;
