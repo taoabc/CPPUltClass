@@ -65,8 +65,15 @@ public:
     return capacity_;
   }
 
-  void SetManualFree(void) {
+  bool SetManualFree(void) {
+    //move stack buffer to heap
+    if (capacity_ <= kSmallBufferSize_) {
+      if (!Grow(kSmallBufferSize_ + 1)) {
+        return false;
+      }
+    }
     manual_free_ = true;
+    return true;
   }
 
 private:
@@ -79,8 +86,11 @@ private:
   }
 
   bool Grow(size_t new_size) {
-    //if use small buffer
+    if (new_size <= capacity_) {
+      return false;
+    }
     void* new_buffer = NULL;
+    //if use small buffer
     if (capacity_ <= kSmallBufferSize_) {
       new_buffer = malloc(new_size);
       if (new_buffer != NULL) {
