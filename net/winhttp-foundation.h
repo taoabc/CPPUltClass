@@ -49,54 +49,30 @@ public:
   }
 }; //class WinHttpHandle
 
-class WinHttpSession {
+class WinHttpSession : public WinHttpHandle {
 
 public:
 
   HRESULT Initialize(bool async = false) {
     DWORD flag = async ? WINHTTP_FLAG_ASYNC : 0;
-    if (!handle_.Attach(::WinHttpOpen(NULL, WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME,
+    if (!Attach(::WinHttpOpen(NULL, WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME,
         WINHTTP_NO_PROXY_BYPASS, flag))) {
       return HRESULT_FROM_WIN32(::GetLastError());
     }
     return S_OK;
   }
-
-  HINTERNET GetHandle(void) const {
-    return handle_.GetHandle();
-  }
-
-  void CloseHandle(void) {
-    handle_.Close();
-  }
-
-private:
-
-  WinHttpHandle handle_;
 }; //class WinHttpSession
 
-class WinHttpConnection {
+class WinHttpConnection : public WinHttpHandle {
 
 public:
 
   HRESULT Initialize(HINTERNET session, const wchar_t* server, unsigned short port) {
-    if (!handle_.Attach(::WinHttpConnect(session, server, port, 0))) {
+    if (!Attach(::WinHttpConnect(session, server, port, 0))) {
       return HRESULT_FROM_WIN32(::GetLastError());
     }
     return S_OK;
   }
-
-  HINTERNET GetHandle(void) const {
-    return handle_.GetHandle();
-  }
-
-  void CloseHandle(void) {
-    handle_.Close();
-  }
-
-private:
-
-  WinHttpHandle handle_;
 }; //class WinHttpConnection
 
 inline bool UltWinHttpCrackUrl(const wchar_t* url, URL_COMPONENTS* uc) {

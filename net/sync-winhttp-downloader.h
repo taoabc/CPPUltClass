@@ -42,8 +42,9 @@ public:
   ~SyncWinHttpDownloader(void) {
   }
 
-  int DownloadString(const wchar_t* url, ult::SimpleBuffer* sbuffer) {
+  int DownloadString(const wchar_t* url, ult::SimpleBuffer* sbuffer, unsigned connect_timeo = 0) {
     Reset();
+    connect_timeo_ = connect_timeo;
     int ret = InitRequest(url);
     if (ret != 0) {
       return ret;
@@ -59,8 +60,9 @@ public:
     return HttpStatus::kSuccess;
   }
 
-  int DownloadFile(const wchar_t* url, const wchar_t* file) {
+  int DownloadFile(const wchar_t* url, const wchar_t* file, unsigned connect_timeo = 0) {
     Reset();
+    connect_timeo_ = connect_timeo;
     int ret = InitRequest(url);
     if (ret != 0) {
       return ret;
@@ -110,6 +112,9 @@ private:
     URL_COMPONENTS uc;
     UltWinHttpCrackUrl(url, &uc);
     std::wstring host_name(uc.lpszHostName, uc.dwHostNameLength);
+    if (connect_timeo_ > 0) {
+      session_.SetOption(WINHTTP_OPTION_CONNECT_TIMEOUT, &connect_timeo_, sizeof (connect_timeo_));
+    }
     hr = connection_.Initialize(session_.GetHandle(), host_name.c_str(), uc.nPort);
     if (FAILED(hr)) {
       return HttpStatus::kConnectError;
@@ -126,8 +131,8 @@ private:
     sbuffer_ = NULL;
     file_ = NULL;
     content_length_ = 0;
-    session_.CloseHandle();
-    connection_.CloseHandle();
+    session_.Close();
+    connection_.Close();
     this->CloseHandle();
   }
 
@@ -135,6 +140,7 @@ private:
   ult::WinHttpSession session_;
 
   DWORD content_length_;
+  unsigned connect_timeo_;
 
   ult::SimpleBuffer* sbuffer_;
   ult::File* file_;
