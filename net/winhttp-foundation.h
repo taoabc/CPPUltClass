@@ -19,7 +19,7 @@ class WinHttpHandle : public HandleBase<HINTERNET> {
 
 public:
 
-  ~WinHttpHandle(void) {
+  virtual ~WinHttpHandle(void) {
     Close();
   }
 
