@@ -15,7 +15,7 @@ class SyncWinHttpRequest {
 public:
 
   SyncWinHttpRequest(void) {
-    buffer_ = new char[kBufferLength];
+    buffer_ = new char[kBufferLength_];
   }
 
   virtual ~SyncWinHttpRequest(void) {
@@ -75,7 +75,7 @@ public:
         break;
       }
       DWORD read;
-      if (FALSE == ::WinHttpReadData(handle_, buffer_, kBufferLength, &read)) {
+      if (FALSE == ::WinHttpReadData(handle_, buffer_, kBufferLength_, &read)) {
         return HRESULT_FROM_WIN32(::GetLastError());
       }
       OnReadComplete(buffer_, read);
@@ -108,7 +108,7 @@ private:
   DWORD avaiable_size_;
 
   enum {
-    kBufferLength = 8 * 1024,
+    kBufferLength_ = 8 * 1024,
   };
 
 }; //class SyncWinHttpRequest

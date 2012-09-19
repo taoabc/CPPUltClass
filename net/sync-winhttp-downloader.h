@@ -8,6 +8,7 @@
 #define ULT_NET_SYNCWINHTTPDOWNLOADER_H_
 
 #include "./sync-winhttp-request.h"
+#include "../simple-buffer.h"
 
 namespace ult {
 
@@ -22,7 +23,7 @@ public:
   ~SyncWinHttpDownloader(void) {
   }
 
-  int DownloadString(const wchar_t* url) {
+  int DownloadString(const wchar_t* url, SimpleBuffer* sbuffer) {
     WinHttpSession session;
     HRESULT hr = session.Initialize();
     if (FAILED(hr)) {
@@ -40,6 +41,7 @@ public:
     if (FAILED(hr)) {
       return hr;
     }
+    sbuffer_ = sbuffer;
     SendRequest(NULL, 0, NULL, 0, 0);
     hr = RecieveResponse();
     if (FAILED(hr)) {
@@ -56,10 +58,13 @@ private:
   }
 
   HRESULT OnReadComplete(const void* info, DWORD length) {
+    sbuffer_->Append(info, length);
     return S_OK;
   }
 
   DWORD content_length_;
+
+  ult::SimpleBuffer* sbuffer_;
 
 }; //class SyncWinHttpDownloader
 } //namespace ult
