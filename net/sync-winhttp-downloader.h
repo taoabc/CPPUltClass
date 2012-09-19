@@ -23,7 +23,7 @@ public:
   ~SyncWinHttpDownloader(void) {
   }
 
-  int DownloadString(const wchar_t* url, SimpleBuffer* sbuffer) {
+  int DownloadString(const wchar_t* url, ult::SimpleBuffer* sbuffer) {
     WinHttpSession session;
     HRESULT hr = session.Initialize();
     if (FAILED(hr)) {
