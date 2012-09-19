@@ -66,6 +66,10 @@ public:
     return handle_.GetHandle();
   }
 
+  void CloseHandle(void) {
+    handle_.Close();
+  }
+
 private:
 
   WinHttpHandle handle_;
@@ -84,6 +88,10 @@ public:
 
   HINTERNET GetHandle(void) const {
     return handle_.GetHandle();
+  }
+
+  void CloseHandle(void) {
+    handle_.Close();
   }
 
 private:

@@ -1,5 +1,5 @@
 /*
-** 文件类
+** 文件IO类
 ** author
 **   taoabc@gmail.com
 */
@@ -172,20 +172,20 @@ public:
     return true;
   }
 
-  bool Write(const void* buffer, DWORD towrite, DWORD* writed) {
-    *writed = 0;
-    unsigned long writed_once = 0;
+  bool Write(const void* buffer, DWORD towrite, DWORD* written) {
+    *written = 0;
+    unsigned long write_once = 0;
     do {
-      bool ret = WritePart(buffer, towrite, &writed_once);
-      *writed += writed_once;
+      bool ret = WritePart(buffer, towrite, &write_once);
+      *written += write_once;
       if (!ret) {
         return false;
       }
-      if (writed_once == 0) {
+      if (write_once == 0) {
         return true;
       }
-      buffer = (const void*)((const unsigned char*)buffer + writed_once);
-      towrite -= writed_once;
+      buffer = (const void*)((const unsigned char*)buffer + write_once);
+      towrite -= write_once;
     } while (towrite > 0);
     return true;
   }
@@ -200,13 +200,13 @@ public:
     return ret;
   }
 
-  bool WritePart(const void* buffer, DWORD towrite, DWORD* writed) {
+  bool WritePart(const void* buffer, DWORD towrite, DWORD* written) {
     if (towrite > kChunkSizeMax_) {
       towrite = kChunkSizeMax_;
     }
     DWORD writed_once = 0;
     bool ret = (::WriteFile(hfile_, buffer, towrite, &writed_once, NULL) != 0);
-    *writed = writed_once;
+    *written = writed_once;
     return ret;
   }
 
@@ -214,11 +214,8 @@ private:
 
   HANDLE hfile_;
 
-  static const unsigned int kChunkSizeMax_;
-};
-
-__declspec(selectany) const unsigned int File::kChunkSizeMax_ = (1 << 25);
-
+  static const unsigned int kChunkSizeMax_ = 1 << 25;
+}; //class File
 } //namespace ult
 
 #endif

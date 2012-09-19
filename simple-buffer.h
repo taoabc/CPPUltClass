@@ -38,7 +38,7 @@ public:
 
   bool Append(const void* data, size_t len) {
     size_t after_append = data_size_ + len;
-    //if len to append is too big
+    //if length to append is too big
     if (after_append < data_size_ || after_append < len) {
       return false;
     }

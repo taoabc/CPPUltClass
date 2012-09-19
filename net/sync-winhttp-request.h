@@ -24,6 +24,10 @@ public:
     }
   }
 
+  void CloseHandle(void) {
+    handle_.Close();
+  }
+
   HRESULT Initialize(HINTERNET connection, const wchar_t* verb, const wchar_t* path, int scheme = INTERNET_SCHEME_HTTP) {
     DWORD flag = (scheme == INTERNET_SCHEME_HTTPS) ? WINHTTP_FLAG_SECURE : 0;
     if (!handle_.Attach(::WinHttpOpenRequest(connection, verb, path, NULL, WINHTTP_NO_REFERER,
@@ -49,6 +53,10 @@ public:
     return S_OK;
   }
 
+  /* before derived class call this function
+  ** some information must be setted
+  ** cause this function will call virtual function which
+  ** implement by derived class */
   HRESULT RecieveResponse(void) {
     HRESULT hr;
     if (FALSE == ::WinHttpReceiveResponse(handle_, NULL)) {
@@ -78,12 +86,21 @@ public:
       if (FALSE == ::WinHttpReadData(handle_, buffer_, kBufferLength_, &read)) {
         return HRESULT_FROM_WIN32(::GetLastError());
       }
-      OnReadComplete(buffer_, read);
+      //error at read data
+      hr = OnReadComplete(buffer_, read);
+      if (FAILED(hr)) {
+        return hr;
+      }
     }
     return S_OK;
   }
 
 protected:
+
+  /* these two functions will be called at receving content
+  ** derived class who interesting in content should rewrite it
+  ** pay attention that callback work under synchronize mode is synchronize
+  ** it means when call this function, the caller is blocked */
 
   virtual HRESULT OnContentLength(DWORD length) {
     return S_OK;
