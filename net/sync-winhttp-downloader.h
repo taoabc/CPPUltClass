@@ -128,7 +128,7 @@ private:
     content_length_ = 0;
     session_.CloseHandle();
     connection_.CloseHandle();
-    CloseHandle();
+    this->CloseHandle();
   }
 
   ult::WinHttpConnection connection_;
