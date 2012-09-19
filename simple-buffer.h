@@ -14,6 +14,12 @@ class SimpleBuffer {
 
 public:
 
+  static void Free(void* buffer) {
+    if (buffer != NULL) {
+      free(buffer);
+    }
+  }
+
   SimpleBuffer(void) {
     InitMember();
   }
