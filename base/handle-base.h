@@ -4,8 +4,8 @@
 ** author
 **   taoabc@gmail.com
 */
-#ifndef ULT_HANDLE_BASE_H_
-#define ULT_HANDLE_BASE_H_
+#ifndef ULT_BASE_HANDLEBASE_H_
+#define ULT_BASE_HANDLEBASE_H_
 
 namespace ult {
 

@@ -6,19 +6,18 @@
 ** modify md5.c to md5.cpp
 **   add include stdafx.h, change #include <string.h> to <string>
 */
-#ifndef ULT_MD5_H_
-#define ULT_MD5_H_
+#ifndef ULT_ENCRYPT_ULTMD5_H_
+#define ULT_ENCRYPT_ULTMD5_H_
 
-#include "md5.h"
+#include "./md5.h"
 #include <string>
 #include <windows.h>
 
 namespace ult {
 
-const int kBufferSize = 1024;
+static const int kBufferSize = 1024;
 
-inline std::string MD5String( const std::string& str )
-{
+inline std::string MD5String(const std::string& str) {
   md5_state_s state;
   md5_byte_t digest[16];
   char hex_output[16*2 + 1];
@@ -32,8 +31,7 @@ inline std::string MD5String( const std::string& str )
   return hex_output;
 }
 
-inline std::string MD5File( const std::wstring& file_name )
-{
+inline std::string MD5File(const std::wstring& file_name) {
   HANDLE hfile = CreateFile(file_name.c_str(), GENERIC_READ, FILE_SHARE_READ,
     NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
   if (INVALID_HANDLE_VALUE == hfile) {
@@ -57,6 +55,6 @@ inline std::string MD5File( const std::wstring& file_name )
   }
   return hex_output;
 }
-}
+} //namespace ult
 
 #endif
