@@ -24,7 +24,7 @@ public:
     }
   }
 
-  void CloseHandle(void) {
+  void Close(void) {
     handle_.Close();
   }
 

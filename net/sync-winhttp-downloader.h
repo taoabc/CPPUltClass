@@ -133,7 +133,7 @@ private:
     content_length_ = 0;
     session_.Close();
     connection_.Close();
-    this->CloseHandle();
+    this->Close();
   }
 
   ult::WinHttpConnection connection_;

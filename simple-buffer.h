@@ -30,9 +30,7 @@ public:
   }
 
   ~SimpleBuffer(void) {
-    if (!manual_free_) {
-      Free();
-    }
+    Free();
   }
 
   void Free(void) {
@@ -63,6 +61,13 @@ public:
     return buffer_;
   }
 
+  void* Detach(void) {
+    EnsureAtHeap();
+    void* p = buffer_;
+    buffer_ = NULL;
+    return p;
+  }
+
   size_t Size(void) const {
     return data_size_;
   }
@@ -71,22 +76,10 @@ public:
     return capacity_;
   }
 
-  bool SetManualFree(void) {
-    //move stack buffer to heap
-    if (capacity_ <= kSmallBufferSize_) {
-      if (!Grow(kSmallBufferSize_ + 1)) {
-        return false;
-      }
-    }
-    manual_free_ = true;
-    return true;
-  }
-
 private:
 
   void InitMember(void) {
     data_size_ = 0;
-    manual_free_ = false;
     buffer_ = small_buffer_;
     capacity_ = kSmallBufferSize_;
   }
@@ -126,6 +119,16 @@ private:
     }
     return new_capacity;
   }
+
+  bool EnsureAtHeap(void) {
+    //move stack buffer to heap
+    if (capacity_ <= kSmallBufferSize_) {
+      if (!Grow(kSmallBufferSize_ + 1)) {
+        return false;
+      }
+    }
+    return true;
+  }
   
   static const size_t kSmallBufferSize_ = 24;
   static const size_t kMaxStep_ = 8 * 1024;
@@ -134,7 +137,6 @@ private:
   void* buffer_;
   size_t capacity_;
   size_t data_size_;
-  bool manual_free_;
 }; //class SimpleBuffer
 } //namespace ult
 
