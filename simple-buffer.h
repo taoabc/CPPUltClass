@@ -16,7 +16,7 @@ public:
 
   static void Free(void* buffer) {
     if (buffer != NULL) {
-      free(buffer);
+      std::free(buffer);
     }
   }
 
@@ -30,14 +30,11 @@ public:
   }
 
   ~SimpleBuffer(void) {
-    Free();
+    FreeBuffer();
   }
 
   void Free(void) {
-    if (capacity_ > kSmallBufferSize_ && buffer_ != NULL) {
-      std::free(buffer_);
-      buffer_ = NULL;
-    }
+    FreeBuffer();
     InitMember();
   }
 
@@ -80,9 +77,15 @@ public:
 private:
 
   void InitMember(void) {
-    data_size_ = 0;
     buffer_ = small_buffer_;
+    data_size_ = 0;
     capacity_ = kSmallBufferSize_;
+  }
+
+  void FreeBuffer(void) {
+    if (buffer_ != small_buffer_) {
+      std::free(buffer_);
+    }
   }
 
   bool Grow(size_t new_size) {
