@@ -42,7 +42,7 @@ public:
   ~SyncWinHttpDownloader(void) {
   }
 
-  int DownloadString(const wchar_t* url, ult::SimpleBuffer* sbuffer, unsigned connect_timeo = 0) {
+  int DownloadString(const std::wstring& url, ult::SimpleBuffer* sbuffer, unsigned connect_timeo = 0) {
     Reset();
     connect_timeo_ = connect_timeo;
     int ret = InitRequest(url);
@@ -60,7 +60,7 @@ public:
     return HttpStatus::kSuccess;
   }
 
-  int DownloadFile(const wchar_t* url, const wchar_t* file, unsigned connect_timeo = 0) {
+  int DownloadFile(const std::wstring& url, const wchar_t* file, unsigned connect_timeo = 0) {
     Reset();
     connect_timeo_ = connect_timeo;
     int ret = InitRequest(url);
@@ -104,13 +104,13 @@ private:
     return S_OK;
   }
 
-  int InitRequest(const wchar_t* url) {
+  int InitRequest(const std::wstring& url) {
     HRESULT hr = session_.Initialize();
     if (FAILED(hr)) {
       return HttpStatus::kUnknownError;
     }
     URL_COMPONENTS uc;
-    UltWinHttpCrackUrl(url, &uc);
+    UltWinHttpCrackUrl(url.c_str(), &uc);
     std::wstring host_name(uc.lpszHostName, uc.dwHostNameLength);
     if (connect_timeo_ > 0) {
       session_.SetOption(WINHTTP_OPTION_CONNECT_TIMEOUT, &connect_timeo_, sizeof (connect_timeo_));
