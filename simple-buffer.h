@@ -38,6 +38,7 @@ public:
       std::free(buffer_);
       buffer_ = NULL;
     }
+    InitMember();
   }
 
   bool Append(const void* data, size_t len) {
@@ -64,7 +65,7 @@ public:
   void* Detach(void) {
     EnsureAtHeap();
     void* p = buffer_;
-    buffer_ = NULL;
+    InitMember();
     return p;
   }
 
