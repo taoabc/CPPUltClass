@@ -3,8 +3,8 @@
 ** author
 **   taoabc@gmail.com
 */
-#ifndef ULT_SOCKET_H_
-#define ULT_SOCKET_H_
+#ifndef ULT_NET_SYNCSOCKET_H_
+#define ULT_NET_SYNCSOCKET_H_
 
 #include <WinSock2.h>
 

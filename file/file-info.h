@@ -4,8 +4,8 @@
 **   taoabc@gmail.com
 */
 
-#ifndef ULT_FILE_INFO_H_
-#define ULT_FILE_INFO_H_
+#ifndef ULT_FILE_FILEINFO_H_
+#define ULT_FILE_FILEINFO_H_
 
 #include "file-io.h"
 #include <windows.h>

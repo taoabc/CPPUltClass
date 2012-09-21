@@ -3,8 +3,8 @@
 ** author
 **   taoabc@gmail.com
 */
-#ifndef ULT_FILE_PE_H_
-#define ULT_FILE_PE_H_
+#ifndef ULT_FILE_FILEPE_H_
+#define ULT_FILE_FILEPE_H_
 
 #include "file-io.h"
 
