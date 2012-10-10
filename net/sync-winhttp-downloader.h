@@ -7,6 +7,7 @@
 #ifndef ULT_NET_SYNCWINHTTPDOWNLOADER_H_
 #define ULT_NET_SYNCWINHTTPDOWNLOADER_H_
 
+#include "./winhttp-downloader-status.h"
 #include "./sync-winhttp-request.h"
 #include "../simple-buffer.h"
 #include "../file-io.h"
@@ -15,28 +16,11 @@
 
 namespace ult {
 
-namespace HttpStatus {
-enum {
-  kContentUncomplete   = -7,
-  kWriteFileError      = -6,
-  kCreateFileError     = -5,
-  kDownloadError       = -4,
-  kSendRequestError    = -3,
-  kConnectError        = -2,
-  kUnknownError        = -1,
-  kSuccess             = 0,
-  kConnecting          = 1,
-  kReceiveing          = 2,
-  kDownloading         = 3,
-};
-}
-
-class SyncWinHttpDownloader : public SyncWinHttpRequest {
+class SyncWinHttpDownloader : public ult::SyncWinHttpRequest {
 
 public:
 
-  SyncWinHttpDownloader(void) :
-      content_length_(0) {
+  SyncWinHttpDownloader(void) {
   }
 
   ~SyncWinHttpDownloader(void) {
@@ -60,7 +44,7 @@ public:
     return HttpStatus::kSuccess;
   }
 
-  int DownloadFile(const std::wstring& url, const wchar_t* file, unsigned connect_timeo = 0) {
+  int DownloadFile(const std::wstring& url, const std::wstring& file, unsigned connect_timeo = 0) {
     Reset();
     connect_timeo_ = connect_timeo;
     int ret = InitRequest(url);
