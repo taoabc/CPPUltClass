@@ -14,13 +14,17 @@ class AsyncWinHttpRequest {
 
 public:
 
-  AsyncWinHttpRequest(void) {
+  AsyncWinHttpRequest(void) :
+      callback_setted_(false) {
     buffer_ = new char[kBufferLength];
   }
 
   virtual ~AsyncWinHttpRequest(void) {
     if (buffer_ != NULL) {
       delete[] buffer_;
+    }
+    if (callback_setted_) {
+      ::WinHttpSetStatusCallback(handle_, NULL, 0, NULL);
     }
   }
 
@@ -36,8 +40,10 @@ public:
     }
     if (WINHTTP_INVALID_STATUS_CALLBACK == ::WinHttpSetStatusCallback(handle_, Callback,
         WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS, NULL)) {
+      callback_setted_ = false;
       return HRESULT_FROM_WIN32(::GetLastError());
     }
+    callback_setted_ = true;
     return S_OK;
   }
 
@@ -152,6 +158,7 @@ private:
   //pritave variable
   WinHttpHandle handle_;
   void* buffer_;
+  bool callback_setted_;
   //private constant
   enum {
     kBufferLength = 8 * 1024,

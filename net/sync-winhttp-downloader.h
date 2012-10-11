@@ -70,6 +70,12 @@ public:
     return HttpStatus::kSuccess;
   }
 
+  void Close(void) {
+    session_.Close();
+    connection_.Close();
+    this->Close();
+  }
+
 private:
 
   HRESULT OnContentLength(DWORD length) {

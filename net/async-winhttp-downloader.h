@@ -44,20 +44,23 @@ public:
   ~AsyncWinHttpDownloader(void) {
   }
 
-  int DownloadString(unsigned id, const std::wstring& url, ult::IAsyncWinHttpEvent* callback) {
+  int DownloadString(unsigned id, const std::wstring& url, ult::IAsyncWinHttpEvent* callback,
+      bool self_destroy = false) {
     Reset();
     id_ = id;
     callback_ = callback;
+    self_destroy_ = self_destroy;
     dltype_ = kString;
     return InitRequest(url);
   }
 
   int DownloadFile(unsigned id, const std::wstring& url, const std::wstring& file_path,
-      ult::IAsyncWinHttpEvent* callback) {
+      ult::IAsyncWinHttpEvent* callback, bool self_destroy = false) {
     Reset();
     id_ = id;
     file_path_ = file_path;
     callback_ = callback;
+    self_destroy_ = self_destroy;
     dltype_ = kFile;
     std::wstring file_folder;
     ult::GetUpperPath(file_path, &file_folder);
@@ -106,6 +109,9 @@ private:
         CallFileHandle(id_, ult::HttpStatus::kUnknownError, (unsigned)file_.GetSize(),
             content_length_, NULL);
       }
+    }
+    if (self_destroy_) {
+      delete this;
     }
     return S_OK;
   }
@@ -168,6 +174,7 @@ private:
     kString,
     kFile
   } dltype_;
+  bool self_destroy_;
 }; // class AsyncWinhttpDownloader
 } //namespace ult
 
