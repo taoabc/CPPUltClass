@@ -12,6 +12,7 @@
 #include "./async-winhttp-request.h"
 #include "../simple-buffer.h"
 #include "../file-io.h"
+#include "../file-dir.h"
 
 #include <string>
 
@@ -44,6 +45,7 @@ public:
   }
 
   int DownloadString(unsigned id, const std::wstring& url, ult::IAsyncWinHttpEvent* callback) {
+    Reset();
     id_ = id;
     callback_ = callback;
     dltype_ = kString;
@@ -52,10 +54,14 @@ public:
 
   int DownloadFile(unsigned id, const std::wstring& url, const std::wstring& file_path,
       ult::IAsyncWinHttpEvent* callback) {
+    Reset();
     id_ = id;
     file_path_ = file_path;
     callback_ = callback;
     dltype_ = kFile;
+    std::wstring file_folder;
+    ult::GetUpperPath(file_path, &file_folder);
+    ult::MakeSureFolderExist(file_folder);
     if (!file_.Create(file_path_, true)) {
       return ult::HttpStatus::kCreateFileError;
     }
@@ -77,14 +83,30 @@ private:
     } else if (dltype_ == kFile) {
       DWORD written;
       file_.Write(info, length, &written);
-      CallFileHandle(id_, ult::HttpStatus::kDownloading, file_.GetSize(),
+      CallFileHandle(id_, ult::HttpStatus::kDownloading, (unsigned)file_.GetSize(),
         content_length_, file_path_);
     }
     return S_OK;
   }
 
   HRESULT OnResponseComplete(HRESULT hr) {
-
+    if (SUCCEEDED(hr)) {
+      if (dltype_ == kString) {
+        CallStringHandle(id_, ult::HttpStatus::kSuccess, buffer_.Size(),
+            content_length_, buffer_.Detach(), buffer_.Size());
+      } else if (dltype_ == kFile) {
+        CallFileHandle(id_, ult::HttpStatus::kSuccess, (unsigned)file_.GetSize(),
+            content_length_, file_path_);
+      }
+    } else {
+      if (dltype_ == kString) {
+        CallStringHandle(id_, ult::HttpStatus::kUnknownError,
+            buffer_.Size(), content_length_, NULL, 0);
+      } else if (dltype_ == kFile) {
+        CallFileHandle(id_, ult::HttpStatus::kUnknownError, (unsigned)file_.GetSize(),
+            content_length_, NULL);
+      }
+    }
     return S_OK;
   }
 

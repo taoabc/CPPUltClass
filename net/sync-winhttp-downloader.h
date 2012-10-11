@@ -11,6 +11,7 @@
 #include "./sync-winhttp-request.h"
 #include "../simple-buffer.h"
 #include "../file-io.h"
+#include "../file-dir.h"
 
 #include <string>
 
@@ -33,12 +34,12 @@ public:
     if (ret != 0) {
       return ret;
     }
-    sbuffer_ = sbuffer;
+    buffer_ = sbuffer;
     HRESULT hr = RecieveResponse();
     if (FAILED(hr)) {
       return HttpStatus::kDownloadError;
     }
-    if (content_length_ != 0 && content_length_ != sbuffer_->Size()) {
+    if (content_length_ != 0 && content_length_ != buffer_->Size()) {
       return HttpStatus::kContentUncomplete;
     }
     return HttpStatus::kSuccess;
@@ -51,6 +52,9 @@ public:
     if (ret != 0) {
       return ret;
     }
+    std::wstring file_folder;
+    ult::GetUpperPath(file, &file_folder);
+    ult::MakeSureFolderExist(file_folder);
     ult::File down_file;
     if (!down_file.Create(file, true)) {
       return HttpStatus::kCreateFileError;
@@ -74,8 +78,8 @@ private:
   }
 
   HRESULT OnReadComplete(const void* info, DWORD length) {
-    if (sbuffer_ != NULL) {
-      if (!sbuffer_->Append(info, length)) {
+    if (buffer_ != NULL) {
+      if (!buffer_->Append(info, length)) {
         return E_FAIL;
       }
     }
@@ -112,7 +116,7 @@ private:
   }
 
   void Reset(void) {
-    sbuffer_ = NULL;
+    buffer_ = NULL;
     file_ = NULL;
     content_length_ = 0;
     session_.Close();
@@ -126,7 +130,7 @@ private:
   DWORD content_length_;
   unsigned connect_timeo_;
 
-  ult::SimpleBuffer* sbuffer_;
+  ult::SimpleBuffer* buffer_;
   ult::File* file_;
 }; //class SyncWinHttpDownloader
 } //namespace ult
