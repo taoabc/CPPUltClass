@@ -110,6 +110,9 @@ private:
             content_length_, NULL);
       }
     }
+    if (dltype_ == kFile) {
+      file_.Close();
+    }
     if (self_destroy_) {
       delete this;
     }

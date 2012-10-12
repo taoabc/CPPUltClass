@@ -73,7 +73,7 @@ public:
   void Close(void) {
     session_.Close();
     connection_.Close();
-    this->Close();
+    ult::SyncWinHttpRequest::Close();
   }
 
 private:
