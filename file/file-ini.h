@@ -3,8 +3,8 @@
 ** author
 **   taoabc@gmail.com
 */
-#ifndef ULT_FILE_INI_H_
-#define ULT_FILE_INI_H_
+#ifndef ULT_FILE_FILEINI_H_
+#define ULT_FILE_FILEINI_H_
 
 #include <string>
 #include <Windows.h>
