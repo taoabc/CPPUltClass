@@ -7,6 +7,7 @@
 #define ULT_SIMPLEBUFFER_H_
 
 #include <cstdlib>
+#include <cstring>
 
 namespace ult {
 
