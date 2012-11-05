@@ -133,7 +133,7 @@ private:
     }
     hr = Initialize(connection_.GetHandle(), L"GET", uc.lpszUrlPath, uc.nScheme);
     if (FAILED(hr)) {
-      return ult::HttpStatus::kSendRequestError;
+      return ult::HttpStatus::kOpenRequestError;
     }
     SendRequest(NULL, 0, NULL, 0, 0);
     return ult::HttpStatus::kSuccess;

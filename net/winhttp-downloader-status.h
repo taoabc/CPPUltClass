@@ -11,11 +11,12 @@ namespace ult{
 
 namespace HttpStatus {
 enum {
-  kContentUncomplete   = -7,
-  kWriteFileError      = -6,
-  kCreateFileError     = -5,
-  kDownloadError       = -4,
-  kSendRequestError    = -3,
+  kContentUncomplete   = -8,
+  kWriteFileError      = -7,
+  kCreateFileError     = -6,
+  kDownloadError       = -5,
+  kSendRequestError    = -4,
+  kOpenRequestError    = -3,
   kConnectError        = -2,
   kUnknownError        = -1,
   kSuccess             = 0,
