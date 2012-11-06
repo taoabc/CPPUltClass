@@ -156,10 +156,14 @@ public:
 
   bool Read(void* buffer, DWORD toread, DWORD* readed) {
     *readed = 0;
+    DWORD t = toread;
     unsigned long readed_once = 0;
     do {
       bool ret = ReadPart(buffer, toread, &readed_once);
       *readed += readed_once;
+      if (*readed > t) {
+        int a = 0;
+      }
       if (!ret) {
         return false;
       }

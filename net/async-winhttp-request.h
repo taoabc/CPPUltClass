@@ -47,17 +47,23 @@ public:
     return S_OK;
   }
 
-  HRESULT SendRequest(const wchar_t* headers, DWORD headers_len, const void* optional, DWORD optional_len, DWORD total_len, bool postdata = false) {
+  HRESULT SendRequest(const wchar_t* headers, DWORD headers_len, const void* optional, DWORD optional_len, DWORD total_len) {
     if (FALSE == ::WinHttpSendRequest(handle_, headers, headers_len,
         const_cast<void*>(optional), optional_len, total_len, reinterpret_cast<DWORD_PTR>(this))) {
       return HRESULT_FROM_WIN32(::GetLastError());
     }
-    postdata_ = postdata;
     return S_OK;
   }
 
   HRESULT WriteData(const void* data, DWORD length) {
     if (FALSE == ::WinHttpWriteData(handle_, data, length, NULL)) {
+      return HRESULT_FROM_WIN32(::GetLastError());
+    }
+    return S_OK;
+  }
+
+  HRESULT RecieveResponse(void) {
+    if (FALSE == ::WinHttpReceiveResponse(handle_, NULL)) {
       return HRESULT_FROM_WIN32(::GetLastError());
     }
     return S_OK;
@@ -85,6 +91,10 @@ protected:
     return S_OK;
   }
 
+  virtual HRESULT OnWriteDataComplete(void) {
+    return S_OK;
+  }
+
 private:
 
   static void CALLBACK Callback(HINTERNET handle, DWORD_PTR context, DWORD code, void* info, DWORD length) {
@@ -99,14 +109,9 @@ private:
     switch (code) {
     case WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE:
       OnSendRequestComplete();
-      if (!postdata_ && FALSE == ::WinHttpReceiveResponse(handle_, NULL)) {
-        return HRESULT_FROM_WIN32(::GetLastError());
-      }
       break;
     case WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE:
-      if (FALSE == ::WinHttpReceiveResponse(handle_, NULL)) {
-        return HRESULT_FROM_WIN32(::GetLastError());
-      }
+      OnWriteDataComplete();
       break;
     case WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE: 
       {
@@ -169,7 +174,6 @@ private:
   WinHttpHandle handle_;
   void* buffer_;
   bool callback_setted_;
-  bool postdata_;
   //private constant
   enum {
     kBufferLength = 8 * 1024,

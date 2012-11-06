@@ -73,6 +73,10 @@ public:
 
 private:
 
+  HRESULT OnSendRequestComplete(void) {
+    return RecieveResponse();
+  }
+
   HRESULT OnContentLength(DWORD length) {
     content_length_ = length;
     return S_OK;
