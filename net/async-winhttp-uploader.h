@@ -15,6 +15,12 @@
 
 namespace ult {
 
+struct IAsyncWinHttpUploaderEvent {
+  virtual void SetTotal(DWORD total) = 0;
+  virtual void SetCompleted(DWORD complated) = 0;
+  virtual void SetStatus(DWORD status) = 0;
+};
+
 class AsyncWinHttpUploader : public ult::AsyncWinHttpRequest {
 
 public:
@@ -25,7 +31,9 @@ public:
   ~AsyncWinHttpUploader(void) {
   }
 
-  int Init(void) {
+  int Init(IAsyncWinHttpUploaderEvent* callback = NULL, DWORD chunk_size = 128 * 1024) {
+    callback_ = callback;
+    chunk_size_ = chunk_size;
     return Reset();
   }
   
@@ -47,7 +55,7 @@ public:
   void Test(const std::wstring& url) {
     InitRequest(url);
     std::wstring header;
-    header = L"Content-Type: multipart/form-data; boundary=" + wboundary_;
+    header = L"Content-Type: application/x-www-form-urlencoded";
     
     sendfield_ = "--" + aboundary_ + kLineEnd_ + "Content-Disposition: form-data; name=\"file\"; filename=\"Capture.PNG\"" + kLineEnd_;
     sendfield_ += "Content-Type: application/octet-stream" + kLineEnd_ + kLineEnd_;
@@ -83,6 +91,8 @@ public:
     if (file_size > 3.5 * 1024 * 1024 * 1024) {
       return ult::HttpStatus::kUnknownError;
     }
+    file_size_ = (DWORD)file_size;
+    SetCallbackTotal(file_size_);
     size_t l1 = sendfield_.length();
     size_t l2 = post_begin_.length();
     size_t l3 = post_end_.length();
@@ -105,20 +115,40 @@ private:
     return S_OK;
   }
 
+  HRESULT OnResponseComplete(HRESULT hr) {
+    if (SUCCEEDED(hr)) {
+      SetCallbackStatus(ult::HttpStatus::kSuccess);
+    } else {
+      SetCallbackStatus(ult::HttpStatus::kUnknownError);
+    }
+    return S_OK;
+  }
+
   HRESULT OnWriteDataComplete(void) {
     switch (flag_) {
     case StepFlag::SendBegin:
       WriteData(post_begin_.c_str(), post_begin_.length());
       flag_ = StepFlag::SendContent;
       file_map_.MapFile();
+      file_view_ = file_map_.GetMapView();
+      file_cursor_ = 0;
       break;
     case StepFlag::SendContent:
       {
-        LPVOID file_data = file_map_.GetMapView();
-        unsigned __int64 lfile_size = file_map_.GetSize();
-        DWORD file_size = (DWORD)lfile_size;
-        WriteData(file_data, file_size);
-        flag_ = StepFlag::SendEnd;
+        if (file_cursor_ < file_size_) {
+          SetCallbackCompleted(file_cursor_);
+          DWORD left = file_size_ - file_cursor_;
+          DWORD tosend;
+          if (left > chunk_size_) {
+            tosend = chunk_size_;
+          } else {
+            //the last chunk of file
+            tosend = left;
+            flag_ = StepFlag::SendEnd;
+          }
+          WriteData((char*)file_view_ + file_cursor_, tosend);
+          file_cursor_ += tosend;
+        }
       }
       break;
     case StepFlag::SendEnd:
@@ -158,6 +188,24 @@ private:
     return ult::HttpStatus::kSuccess;
   }
 
+  void SetCallbackTotal(DWORD total) {
+    if (callback_ != NULL) {
+      callback_->SetTotal(total);
+    }
+  }
+
+  void SetCallbackCompleted(DWORD completed) {
+    if (callback_ != NULL) {
+      callback_->SetCompleted(completed);
+    }
+  }
+
+  void SetCallbackStatus(DWORD s) {
+    if (callback_ != NULL) {
+      callback_->SetStatus(s);
+    }
+  }
+
   ult::WinHttpSession session_;
   ult::WinHttpConnection connection_;
 
@@ -168,6 +216,9 @@ private:
 
   std::string aboundary_;
   std::wstring wboundary_;
+  DWORD file_size_;
+  DWORD file_cursor_;
+  LPVOID file_view_;
 
   enum class StepFlag {
     SendField,
@@ -176,6 +227,8 @@ private:
     SendEnd,
     Over,
   } flag_;
+  DWORD chunk_size_;
+  IAsyncWinHttpUploaderEvent* callback_;
   static const std::string kLineEnd_;
 }; //class AsyncWinHttpUploader
 
