@@ -55,21 +55,8 @@ public:
     return true;
   }
 
-  bool Open(const std::wstring& filename) {
-    return OpenOperation(filename, GENERIC_READ);
-  }
-
-  bool Open(const std::wstring& filename, DWORD dwaccess) {
+  bool Open(const std::wstring& filename, DWORD dwaccess = GENERIC_READ) {
     return OpenOperation(filename, dwaccess);
-  }
-
-  bool OpenOperation(const std::wstring& filename, DWORD dwaccess) {
-    hfile_ = ::CreateFile(filename.c_str(), dwaccess, FILE_SHARE_READ, NULL,
-      OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hfile_ == INVALID_HANDLE_VALUE) {
-      return false;
-    }
-    return true;
   }
 
   bool Create(const std::wstring& filename, bool create_always) {
@@ -215,6 +202,15 @@ public:
   }
 
 private:
+  
+  bool OpenOperation(const std::wstring& filename, DWORD dwaccess) {
+    hfile_ = ::CreateFile(filename.c_str(), dwaccess, FILE_SHARE_READ, NULL,
+      OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hfile_ == INVALID_HANDLE_VALUE) {
+      return false;
+    }
+    return true;
+  }
 
   HANDLE hfile_;
 
