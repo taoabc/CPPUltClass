@@ -71,7 +71,8 @@ public:
     sendfield_ += kLineEnd_;
   }
 
-  int PostFileToUrl(const std::wstring& url, const std::wstring& file, const std::wstring& field = L"file") {
+  int PostFileToUrl(const std::wstring& url, const std::wstring& file,
+      DWORD start_position = 0, const std::wstring& field = L"file") {
     int ret = InitRequest(url);
     if (ret != ult::HttpStatus::kSuccess) {
       return ret;
@@ -92,7 +93,11 @@ public:
       return ult::HttpStatus::kUnknownError;
     }
     file_size_ = (DWORD)file_size;
-    SetCallbackTotal(file_size_);
+    if (start_position >= file_size_) {
+      return ult::HttpStatus::kUnknownError;
+    }
+    file_cursor_ = start_position;
+    SetCallbackTotal(file_size_ - file_cursor_);
     size_t l1 = sendfield_.length();
     size_t l2 = post_begin_.length();
     size_t l3 = post_end_.length();
@@ -131,7 +136,6 @@ private:
       flag_ = StepFlag::SendContent;
       file_map_.MapFile();
       file_view_ = file_map_.GetMapView();
-      file_cursor_ = 0;
       break;
     case StepFlag::SendContent:
       {
