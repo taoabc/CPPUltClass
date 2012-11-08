@@ -35,21 +35,20 @@ public:
     return true;
   }
 
-  bool MapFile(void) {
+  bool CreateMapping(void) {
     DWORD dwprotect;
-    DWORD dwview_access;
     if (dwaccess_ == GENERIC_READ) {
       dwprotect = PAGE_READONLY;
-      dwview_access = FILE_MAP_READ;
+      dwview_access_ = FILE_MAP_READ;
     } else if (dwaccess_ == (GENERIC_READ | GENERIC_WRITE)) {
       dwprotect = PAGE_READWRITE;
-      dwview_access = FILE_MAP_WRITE;
+      dwview_access_ = FILE_MAP_WRITE;
     } else if (dwaccess_ == (GENERIC_READ| GENERIC_EXECUTE)) {
       dwprotect = PAGE_EXECUTE_READ;
-      dwview_access = FILE_MAP_EXECUTE;
+      dwview_access_ = FILE_MAP_EXECUTE;
     } else if (dwaccess_ == (GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE)) {
       dwprotect = PAGE_EXECUTE_READWRITE;
-      dwview_access = FILE_MAP_EXECUTE;
+      dwview_access_ = FILE_MAP_EXECUTE;
     }
     unsigned __int64 filesize = this->GetSize();
     if (filesize == 0) {
@@ -59,7 +58,12 @@ public:
     if (file_mapping_ == NULL) {
       return false;
     }
-    pfile_view_ = ::MapViewOfFile(file_mapping_, dwview_access, 0, 0, 0);
+    return true;
+  }
+
+  bool NextMapView(SIZE_T map_bytes, LPVOID* mapview, DWORD* map_size) {
+    UnmapView();
+    pfile_view_ = ::MapViewOfFile(file_mapping_, dwview_access_, 0, 0, 0);
     if (pfile_view_ == NULL) {
       return false;
     }
@@ -67,18 +71,9 @@ public:
   }
 
   void Close(void) {
-    if (pfile_view_ != NULL) {
-      ::UnmapViewOfFile(pfile_view_);
-      pfile_view_ = NULL;
-    }
-    if (file_mapping_ != NULL) {
-      ::CloseHandle(file_mapping_);
-      file_mapping_ = NULL;
-    }
-    if (file_ != NULL) {
-      ::CloseHandle(file_);
-      file_ = NULL;
-    }
+    UnmapView();
+    CloseMapping();
+    CloseFile();
   }
 
   LPVOID GetMapView(void) {
@@ -96,7 +91,29 @@ public:
 
 private:
 
+  void UnmapView(void) {
+    if (pfile_view_ != NULL) {
+      ::UnmapViewOfFile(pfile_view_);
+      pfile_view_ = NULL;
+    }
+  }
+
+  void CloseMapping(void) {
+    if (file_mapping_ != NULL) {
+      ::CloseHandle(file_mapping_);
+      file_mapping_ = NULL;
+    }
+  }
+
+  void CloseFile(void) {
+    if (file_ != NULL) {
+      ::CloseHandle(file_);
+      file_ = NULL;
+    }
+  }
+
   DWORD dwaccess_;
+  DWORD dwview_access_;
   HANDLE file_;
   HANDLE file_mapping_;
   PVOID pfile_view_;
