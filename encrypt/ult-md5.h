@@ -11,6 +11,7 @@
 
 #include "./md5.h"
 #include "../file-map.h"
+#include "../string-operate.h"
 #include <string>
 #include <windows.h>
 #include <algorithm>

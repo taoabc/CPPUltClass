@@ -97,7 +97,7 @@ public:
       return ult::HttpStatus::kUnknownError;
     }
     file_cursor_ = start_position;
-    SetCallbackTotal(file_size_ - file_cursor_);
+    SetCallbackTotal(file_size_);
     size_t l1 = sendfield_.length();
     size_t l2 = post_begin_.length();
     size_t l3 = post_end_.length();
