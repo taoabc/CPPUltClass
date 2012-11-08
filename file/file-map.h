@@ -52,11 +52,10 @@ public:
       dwview_access = FILE_MAP_EXECUTE;
     }
     unsigned __int64 filesize = this->GetSize();
-    DWORD size_low = 0;
     if (filesize == 0) {
-      size_low = 1;
+      return false;
     }
-    file_mapping_ = ::CreateFileMapping(file_, NULL, dwprotect, 0, size_low, NULL);
+    file_mapping_ = ::CreateFileMapping(file_, NULL, dwprotect, 0, 0, NULL);
     if (file_mapping_ == NULL) {
       return false;
     }

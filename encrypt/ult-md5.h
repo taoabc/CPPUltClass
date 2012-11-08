@@ -1,5 +1,5 @@
 /*
-** md5 计算封闭类
+** md5 计算封装类
 ** author
 **   taoabc@gmail.com
 ** based md5.h md5.c
@@ -10,17 +10,20 @@
 #define ULT_ENCRYPT_ULTMD5_H_
 
 #include "./md5.h"
+#include "../file-map.h"
 #include <string>
 #include <windows.h>
+#include <algorithm>
 
 namespace ult {
-
-static const int kBufferSize = 1024;
-
-inline std::string MD5String(const std::string& str) {
+  
+inline std::wstring MD5String(const std::string& str) {
   md5_state_s state;
   md5_byte_t digest[16];
   char hex_output[16*2 + 1];
+  if (str.empty() || str.length() > 0x7fffffff) {
+    return L"";
+  }
 
   md5_init(&state);
   md5_append(&state, (const md5_byte_t*)str.c_str(), str.length());
@@ -28,32 +31,45 @@ inline std::string MD5String(const std::string& str) {
   for (int di = 0; di < 16; ++di) {
     sprintf_s(hex_output + di * 2, 3, "%02x", digest[di]);
   }
-  return hex_output;
+  return ult::AnsiToUnicode(hex_output);
 }
 
-inline std::string MD5File(const std::wstring& file_name) {
-  HANDLE hfile = CreateFile(file_name.c_str(), GENERIC_READ, FILE_SHARE_READ,
-    NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-  if (INVALID_HANDLE_VALUE == hfile) {
-    return "";
+inline std::wstring MD5File(const std::wstring& file_name) {
+  ult::FileMap file_map;
+  if (!file_map.Open(file_name)) {
+    return L"";
   }
   md5_state_s state;
   md5_byte_t digest[16];
   char hex_output[16*2 + 1];
-  char buffer[kBufferSize];
 
   md5_init(&state);
-
-  DWORD dwread;
-  while (0 != ReadFile(hfile, buffer, kBufferSize, &dwread, NULL) && 0 < dwread) {
-    md5_append(&state, (const md5_byte_t*)buffer, dwread);
+  if (!file_map.MapFile()) {
+    return L"";
   }
-  CloseHandle(hfile);
+  LPVOID map_view = file_map.GetMapView();
+  unsigned __int64 file_size = file_map.GetSize();
+  if (file_size == 0) {
+    return L"";
+  }
+  //because md5.cpp use int to get len, so here number is no greater than max of int
+  //here I asume int is 4 bytes
+  unsigned __int64 max_int = 0x7fffffff;
+  unsigned __int64 cursor = 0;
+  while (true) {
+    unsigned __int64 left = file_size - cursor;
+    unsigned __int64 tocalc = max_int > left ? left : max_int;
+    md5_append(&state, (const md5_byte_t*)map_view+cursor, (int)tocalc);
+    if (left < max_int) {
+      break;
+    }
+    cursor += tocalc;
+  }
   md5_finish(&state, digest);
   for (int di = 0; di < 16; ++di) {
     sprintf_s(hex_output + di * 2, 3, "%02x", digest[di]);
   }
-  return hex_output;
+  return ult::AnsiToUnicode(hex_output);
 }
 } //namespace ult
 
