@@ -134,25 +134,24 @@ private:
     case StepFlag::SendBegin:
       WriteData(post_begin_.c_str(), post_begin_.length());
       flag_ = StepFlag::SendContent;
-      file_map_.MapFile();
-      file_view_ = file_map_.GetMapView();
+      file_map_.CreateMapping();
       break;
     case StepFlag::SendContent:
       {
-        if (file_cursor_ < file_size_) {
-          SetCallbackCompleted(file_cursor_);
-          DWORD left = file_size_ - file_cursor_;
-          DWORD tosend;
-          if (left > chunk_size_) {
-            tosend = chunk_size_;
-          } else {
-            //the last chunk of file
-            tosend = left;
-            flag_ = StepFlag::SendEnd;
-          }
-          WriteData((char*)file_view_ + file_cursor_, tosend);
-          file_cursor_ += tosend;
-        }
+        //if (file_cursor_ < file_size_) {
+        //  SetCallbackCompleted(file_cursor_);
+        //  DWORD left = file_size_ - file_cursor_;
+        //  DWORD tosend;
+        //  if (left > chunk_size_) {
+        //    tosend = chunk_size_;
+        //  } else {
+        //    //the last chunk of file
+        //    tosend = left;
+        //    flag_ = StepFlag::SendEnd;
+        //  }
+        //  WriteData((char*)file_view_ + file_cursor_, tosend);
+        //  file_cursor_ += tosend;
+        //}
       }
       break;
     case StepFlag::SendEnd:

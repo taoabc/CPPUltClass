@@ -26,6 +26,7 @@ public:
   }
 
   bool Open(const std::wstring& filename, DWORD dwaccess = GENERIC_READ) {
+    Close();
     file_ = ::CreateFile(filename.c_str(), dwaccess, FILE_SHARE_READ, NULL,
       OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (file_ == INVALID_HANDLE_VALUE) {
@@ -54,30 +55,25 @@ public:
     if (filesize == 0) {
       return false;
     }
+    UnmapView();
+    CloseMapping();
     file_mapping_ = ::CreateFileMapping(file_, NULL, dwprotect, 0, 0, NULL);
     if (file_mapping_ == NULL) {
       return false;
     }
     return true;
   }
-
-  bool NextMapView(SIZE_T map_bytes, LPVOID* mapview, DWORD* map_size) {
+  
+  void* MapView(UINT64 offset, SIZE_T map_bytes) {
     UnmapView();
-    pfile_view_ = ::MapViewOfFile(file_mapping_, dwview_access_, 0, 0, 0);
-    if (pfile_view_ == NULL) {
-      return false;
-    }
-    return true;
+    pfile_view_ = ::MapViewOfFile(file_mapping_, dwview_access_, offset >> 32, offset & 0xffffffff, map_bytes);
+    return pfile_view_;
   }
-
+  
   void Close(void) {
     UnmapView();
     CloseMapping();
     CloseFile();
-  }
-
-  LPVOID GetMapView(void) {
-    return pfile_view_;
   }
 
   unsigned __int64 GetSize(void) {
