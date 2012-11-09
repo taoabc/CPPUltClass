@@ -35,6 +35,7 @@ inline std::wstring MD5String(const std::string& str) {
   return ult::AnsiToUnicode(hex_output);
 }
 
+//this function have a big problem with tail part read
 inline std::wstring MD5File(const std::wstring& file_name) {
   ult::FileMap file_map;
   if (!file_map.Open(file_name)) {
@@ -54,8 +55,7 @@ inline std::wstring MD5File(const std::wstring& file_name) {
   }
   LPVOID file_view = NULL;
   //first, try 1GB size
-  //DWORD map_size = 0x40000000;
-  DWORD map_size = 1024*1024;
+  DWORD map_size = 0x40000000;
   UINT64 cursor = 0;
   DWORD before_cursor = 0;
   DWORD useful_size = 0;
