@@ -35,7 +35,6 @@ inline std::wstring MD5String(const std::string& str) {
   return ult::AnsiToUnicode(hex_output);
 }
 
-//this function have a big problem with tail part read
 inline std::wstring MD5File(const std::wstring& file_name) {
   ult::FileMap file_map;
   if (!file_map.Open(file_name)) {
@@ -54,36 +53,41 @@ inline std::wstring MD5File(const std::wstring& file_name) {
     return L"";
   }
   LPVOID file_view = NULL;
-  //first, try 1GB size
-  DWORD map_size = 0x40000000;
   UINT64 cursor = 0;
-  DWORD before_cursor = 0;
-  DWORD useful_size = 0;
   //get allocation granularity
   SYSTEM_INFO sys_info;
   ::GetSystemInfo(&sys_info);
   DWORD glt = sys_info.dwAllocationGranularity;
+  DWORD map_size = 0xffffffff - 0xffffffff % glt;
   //main loop to read file from map view
   while (cursor < file_size) {
+    //first part try and last part may trigger this
     if (map_size > (file_size - cursor)) {
       map_size = (DWORD)(file_size - cursor);
     }
     //sub loop to try a situable size of file view
-    //I assume that when mapping 1MB size fail, that fial
     do {
-      //the offset must be a multiple of the allocation granularity
-      before_cursor = cursor % glt;
-      //map_size = 1024 * 1024 * 1024 * 50;
-      file_view = file_map.MapView(cursor - before_cursor, map_size);
+      //only first part try and last part
+      //map_size may not be multiple of the allocation granularity
+      //当尝试第一块数据的时候，如果大小没有跟分配粒度对齐
+      //那么这个大小必定是文件大小，所以，如果成功，就不会出现两次映射的情况
+      //当尝试中间块数据的时候，则表明已经出现过映射未成功的现象
+      //那么不会触发上一句的map_size重新赋值，则map_size仍然为分配粒度的整数倍
+      //如果是尝试读最后一块，那么下一次就不需要再读取，所以map_size是否为分配粒度无关
+      file_view = file_map.MapView(cursor, map_size);
       if (file_view == NULL) {
-        map_size >>= 1;
+        map_size >>= 1; 
+        //the offset must be a multiple of the allocation granularity
+        //plus a glt is avoid always calc 3 times than 2 times
+        //确保大小为分配粒度的整数倍，向上多取一个粒度是为了保证在取一半文件大小的时候
+        //如果是向下减掉一个粒度，那么读文件，需要多读几次，最后一段势必相当小
+        map_size = map_size - map_size % glt + glt;
       }
     } while (file_view == NULL && map_size > 0x100000);
     //if success, deal with it
     if (file_view != 0) {
-      useful_size = map_size - before_cursor;
-      md5_append(&state, (const md5_byte_t*)file_view+before_cursor, useful_size);
-      cursor += useful_size;
+      md5_append(&state, (const md5_byte_t*)file_view, map_size);
+      cursor += map_size;
     } else {
       return L"";
     }
