@@ -69,6 +69,12 @@ public:
     pfile_view_ = ::MapViewOfFile(file_mapping_, dwview_access_, offset >> 32, offset & 0xffffffff, map_bytes);
     return pfile_view_;
   }
+
+  void UnmapView(LPVOID view) {
+    if (view != NULL) {
+      ::UnmapViewOfFile(view);
+    }
+  }
   
   void Close(void) {
     UnmapView();

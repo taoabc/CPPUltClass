@@ -33,8 +33,20 @@ public:
 
   int Init(IAsyncWinHttpUploaderEvent* callback = NULL, DWORD chunk_size = 128 * 1024) {
     callback_ = callback;
-    chunk_size_ = chunk_size;
+    SetChunkSize(chunk_size);
     return Reset();
+  }
+
+  DWORD SetChunkSize(DWORD chunk_size) {
+    SYSTEM_INFO sys_info;
+    ::GetSystemInfo(&sys_info);
+    DWORD glt = sys_info.dwAllocationGranularity;
+    if (0xffffffff - glt < chunk_size) {
+      chunk_size_ = 0xffffffff - 0xffffffff%glt;
+    } else {
+      chunk_size_ = (chunk_size + glt-1) - (chunk_size + glt-1) % glt;
+    }
+    return chunk_size_;
   }
   
   int Reset(void) {
@@ -138,20 +150,25 @@ private:
       break;
     case StepFlag::SendContent:
       {
-        //if (file_cursor_ < file_size_) {
-        //  SetCallbackCompleted(file_cursor_);
-        //  DWORD left = file_size_ - file_cursor_;
-        //  DWORD tosend;
-        //  if (left > chunk_size_) {
-        //    tosend = chunk_size_;
-        //  } else {
-        //    //the last chunk of file
-        //    tosend = left;
-        //    flag_ = StepFlag::SendEnd;
-        //  }
-        //  WriteData((char*)file_view_ + file_cursor_, tosend);
-        //  file_cursor_ += tosend;
-        //}
+        if (file_cursor_ < file_size_) {
+          SetCallbackCompleted(file_cursor_);
+          DWORD left = file_size_ - file_cursor_;
+          DWORD tosend;
+          if (left > chunk_size_) {
+            tosend = chunk_size_;
+          } else {
+            //the last chunk of file
+            tosend = left;
+            flag_ = StepFlag::SendEnd;
+          }
+          LPVOID file_view = file_map_.MapView(file_cursor_, tosend);
+          if (file_view == NULL) {
+            SetCallbackStatus(ult::HttpStatus::kReadFileError);
+          } else {
+            WriteData(file_view, tosend);
+            file_cursor_ += tosend;
+          }
+        }
       }
       break;
     case StepFlag::SendEnd:
@@ -221,7 +238,6 @@ private:
   std::wstring wboundary_;
   DWORD file_size_;
   DWORD file_cursor_;
-  LPVOID file_view_;
 
   enum class StepFlag {
     SendField,

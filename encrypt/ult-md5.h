@@ -81,11 +81,11 @@ inline std::wstring MD5File(const std::wstring& file_name) {
         //plus a glt is avoid always calc 3 times than 2 times
         //确保大小为分配粒度的整数倍，向上多取一个粒度是为了保证在取一半文件大小的时候
         //如果是向下减掉一个粒度，那么读文件，需要多读几次，最后一段势必相当小
-        map_size = map_size - map_size % glt + glt;
+        map_size = (map_size + glt-1) - (map_size + glt-1) % glt;
       }
     } while (file_view == NULL && map_size > 0x100000);
     //if success, deal with it
-    if (file_view != 0) {
+    if (file_view != NULL) {
       md5_append(&state, (const md5_byte_t*)file_view, map_size);
       cursor += map_size;
     } else {

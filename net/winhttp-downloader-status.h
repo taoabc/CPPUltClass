@@ -11,6 +11,7 @@ namespace ult{
 
 namespace HttpStatus {
 enum {
+  kReadFileError       = -9,
   kContentUncomplete   = -8,
   kWriteFileError      = -7,
   kCreateFileError     = -6,
