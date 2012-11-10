@@ -38,14 +38,9 @@ public:
   }
 
   DWORD SetChunkSize(DWORD chunk_size) {
-    SYSTEM_INFO sys_info;
-    ::GetSystemInfo(&sys_info);
-    DWORD glt = sys_info.dwAllocationGranularity;
-    if (0xffffffff - glt < chunk_size) {
-      chunk_size_ = 0xffffffff - 0xffffffff%glt;
-    } else {
-      chunk_size_ = (chunk_size + glt-1) - (chunk_size + glt-1) % glt;
-    }
+    DWORD glt = GetGranularity();
+    chunk_size = chunk_size < 0x80000000 ? chunk_size : 0x80000000;
+    chunk_size_ = (chunk_size + glt-1) - (chunk_size + glt-1) % glt;
     return chunk_size_;
   }
   
@@ -108,12 +103,13 @@ public:
     if (start_position >= file_size_) {
       return ult::HttpStatus::kUnknownError;
     }
+    DWORD file_size_tosend = file_size_ - start_position;
     file_cursor_ = start_position;
     SetCallbackTotal(file_size_);
     size_t l1 = sendfield_.length();
     size_t l2 = post_begin_.length();
     size_t l3 = post_end_.length();
-    DWORD total_size = (DWORD)file_size + sendfield_.length() + post_begin_.length() + post_end_.length();
+    DWORD total_size = file_size_tosend + sendfield_.length() + post_begin_.length() + post_end_.length();
     SendRequest(header.c_str(), -1L, NULL, 0, total_size);
     return ult::HttpStatus::kSuccess;
   }
@@ -153,20 +149,23 @@ private:
         if (file_cursor_ < file_size_) {
           SetCallbackCompleted(file_cursor_);
           DWORD left = file_size_ - file_cursor_;
-          DWORD tosend;
+          DWORD cursor_ahead = file_cursor_ % GetGranularity();
+          DWORD map_size;
           if (left > chunk_size_) {
-            tosend = chunk_size_;
+            map_size = chunk_size_;
           } else {
             //the last chunk of file
-            tosend = left;
+            map_size = left;
             flag_ = StepFlag::SendEnd;
           }
-          LPVOID file_view = file_map_.MapView(file_cursor_, tosend);
+          map_size += cursor_ahead;
+          LPVOID file_view = file_map_.MapView(file_cursor_-cursor_ahead, map_size);
           if (file_view == NULL) {
             SetCallbackStatus(ult::HttpStatus::kReadFileError);
           } else {
-            WriteData(file_view, tosend);
-            file_cursor_ += tosend;
+            DWORD useful_size = map_size - cursor_ahead;
+            WriteData((char*)file_view+cursor_ahead, useful_size);
+            file_cursor_ += useful_size;
           }
         }
       }
@@ -224,6 +223,16 @@ private:
     if (callback_ != NULL) {
       callback_->SetStatus(s);
     }
+  }
+
+  DWORD GetGranularity(void) {
+    static DWORD glt = 0;
+    if (glt == 0) {
+      SYSTEM_INFO sys_info;
+      ::GetSystemInfo(&sys_info);
+      glt = sys_info.dwAllocationGranularity;
+    }
+    return glt;
   }
 
   ult::WinHttpSession session_;
