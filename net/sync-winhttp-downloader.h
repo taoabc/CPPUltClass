@@ -52,8 +52,7 @@ public:
     if (ret != 0) {
       return ret;
     }
-    std::wstring file_folder;
-    ult::GetUpperPath(file, &file_folder);
+    std::wstring file_folder(ult::GetUpperPath(file));
     ult::MakeSureFolderExist(file_folder);
     ult::File down_file;
     if (!down_file.Create(file, true)) {

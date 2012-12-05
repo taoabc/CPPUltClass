@@ -27,9 +27,9 @@ inline void ToPurenameAndExtension(const std::wstring& fullname,
 }
 
 inline void ToUpperpathAndFilename(const std::wstring& fullpath,
-                                   const std::wstring& pathseparator,
                                    std::wstring* pathprefix,
-                                   std::wstring* filename) {
+                                   std::wstring* filename,
+                                   const std::wstring& pathseparator = L"\\") {
   int separator_len = pathseparator.length();
   int pos = fullpath.rfind(pathseparator);
   if (pos == std::wstring::npos) {
@@ -50,23 +50,32 @@ inline void AddPathBackslash(std::wstring* dirpath) {
   }
 }
 
+inline void RemovePathBackslash(std::wstring* dirpath) {
+  if (dirpath->empty()) {
+    return;
+  }
+  if (dirpath->rfind(L"\\") == dirpath->length()-1) {
+    dirpath->assign(dirpath->c_str(), dirpath->length()-1);
+  }
+}
+
 inline void AppendPath(std::wstring* toappend,
                        const std::wstring& post) {
     AddPathBackslash(toappend);
     toappend->append(post);
 }
 
-inline unsigned __int64 GetDriveFreeSpace(const std::wstring& drive) {
+inline ULONGLONG GetDriveFreeSpace(const std::wstring& drive) {
   ULARGE_INTEGER freespace;
   ::GetDiskFreeSpaceEx(drive.c_str(), &freespace, NULL, NULL);
   return freespace.QuadPart;
 }
 
-inline void GetMaxFreeSpaceDrive(std::wstring* drive,
-                                 unsigned __int64* freesize) {
+inline std::wstring GetMaxFreeSpaceDrive(ULONGLONG* freesize = NULL) {
   DWORD buf_len = ::GetLogicalDriveStrings(0, NULL);
   wchar_t* buf = new wchar_t [buf_len];
 
+  std::wstring drive;
   ULONGLONG maxfree = 0;
 
   if (0 != ::GetLogicalDriveStrings(buf_len, buf)) {
@@ -77,7 +86,7 @@ inline void GetMaxFreeSpaceDrive(std::wstring* drive,
         ULONGLONG t = GetDriveFreeSpace(drive_tmp);
         if (t > maxfree) {
           maxfree = t;
-          drive->assign(drive_tmp);
+          drive = drive_tmp;
         }
       }
       i = static_cast<DWORD>(wcslen(drive_tmp)) + 1;
@@ -85,19 +94,22 @@ inline void GetMaxFreeSpaceDrive(std::wstring* drive,
     }
   }
   delete[] buf;
-  *freesize = maxfree;
+  if (freesize != NULL) {
+    *freesize = maxfree;
+  }
+  return drive;
 }
 
-inline void GetProgramFilesDirectory(std::wstring* directory) {
+inline std::wstring GetProgramFilesDirectory(void) {
   wchar_t buf[MAX_PATH];
   ::SHGetFolderPath(NULL, CSIDL_PROGRAM_FILES | CSIDL_FLAG_CREATE, NULL, SHGFP_TYPE_CURRENT, buf);
-  directory->assign(buf);
+  return buf;
 }
 
-inline void GetAppDataDirectory(std::wstring* directory) {
+inline std::wstring GetAppDataDirectory(void) {
   wchar_t buf[MAX_PATH];
   ::SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE, NULL, SHGFP_TYPE_CURRENT, buf);
-  directory->assign(buf);
+  return buf;
 }
 
 inline bool IsPathFileExist(const std::wstring& pathfile) {
@@ -108,36 +120,30 @@ inline bool IsPathFileExist(const std::wstring& pathfile) {
   }
 }
 
-inline bool GetUpperPath(const std::wstring& path, std::wstring* upper_path) {
-  upper_path->clear();
-  int pos = path.rfind(L'\\');
+inline std::wstring GetUpperPath(const std::wstring& path) {
+  std::wstring tmp(path);
+  ult::RemovePathBackslash(&tmp);
+  int pos = tmp.rfind(L'\\');
   if (pos == std::wstring::npos) {
     return false;
   }
-  if (pos == (path.length()-1)) {
-    return GetUpperPath(std::wstring(path.c_str(), path.length()-1), upper_path);
-  }
-  upper_path->assign(path.c_str(), pos+1);
-  return true;
+  return std::wstring(tmp.c_str(), pos+1);
 }
 
-inline void GetSelfModulePath(std::wstring* path) {
+inline std::wstring GetSelfModulePath(void) {
   wchar_t buf[MAX_PATH];
   ::GetModuleFileName(NULL, buf, MAX_PATH);
-  path->assign(buf);
+  return buf;
 }
 
-inline void GetSelfModuleDirectory(std::wstring* dir) {
-  wchar_t buf[MAX_PATH];
-  ::GetModuleFileName(NULL, buf, MAX_PATH);
-  GetUpperPath(buf, dir);
+inline std::wstring GetSelfModuleDirectory(void) {
+  return GetUpperPath(ult::GetSelfModulePath());
 }
 
-inline void GetNamedModuleDirectory(const std::wstring& module_name,
-                                    std::wstring* path) {
+inline std::wstring GetNamedModuleDirectory(const std::wstring& module_name) {
   wchar_t buf[MAX_PATH];
   ::GetModuleFileName(GetModuleHandle(module_name.c_str()), buf, MAX_PATH);
-  GetUpperPath(buf, path);
+  return GetUpperPath(buf);
 }
 
 inline bool MakeSureFolderExist(const std::wstring& folder_path) {

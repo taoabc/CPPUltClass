@@ -89,7 +89,7 @@ public:
     post_begin_ = "--" + aboundary_ + kLineEnd_ + "Content-Disposition: form-data; name=\"";
     post_begin_ += ult::UnicodeToAnsi(field) + "\"; filename=\"";
     std::wstring dir, name;
-    ult::ToUpperpathAndFilename(file, L"\\", &dir, &name);
+    ult::ToUpperpathAndFilename(file, &dir, &name);
     post_begin_ += ult::UnicodeToAnsi(name) + "\"" + kLineEnd_ + "Content-Type: application/octet-stream" + kLineEnd_ + kLineEnd_;
     //biuld end
     post_end_ = kLineEnd_ + "--" + aboundary_ + "--" + kLineEnd_;
