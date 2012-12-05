@@ -89,8 +89,8 @@ inline std::wstring GetMaxFreeSpaceDrive(ULONGLONG* freesize = NULL) {
           drive = drive_tmp;
         }
       }
-      i = static_cast<DWORD>(wcslen(drive_tmp)) + 1;
-      drive_tmp += i;
+      i += static_cast<DWORD>(wcslen(drive_tmp)) + 1;
+      drive_tmp = buf + i;
     }
   }
   delete[] buf;
