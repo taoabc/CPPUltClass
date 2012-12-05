@@ -102,13 +102,13 @@ private:
     void* new_buffer = NULL;
     //if use small buffer
     if (capacity_ <= kSmallBufferSize_) {
-      new_buffer = malloc(new_size);
+      new_buffer = std::malloc(new_size);
       if (new_buffer != NULL) {
-        memcpy(new_buffer, buffer_, data_size_);
+       std::memcpy(new_buffer, buffer_, data_size_);
       }
     //if use heap, need realloc
     } else {
-      new_buffer = realloc(buffer_, new_size);
+      new_buffer = std::realloc(buffer_, new_size);
     }
     if (new_buffer == NULL) {
       return false;
