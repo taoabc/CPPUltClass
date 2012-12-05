@@ -45,8 +45,8 @@ inline void AddPathBackslash(std::wstring* dirpath) {
   if (dirpath->empty()) {
     return;
   }
-  if (dirpath->rfind(L"\\") != dirpath->length()-1) {
-    dirpath->append(L"\\");
+  if (dirpath->at(dirpath->length()-1) == L'\\') {
+    dirpath->push_back(L'\\');
   }
 }
 
@@ -54,8 +54,8 @@ inline void RemovePathBackslash(std::wstring* dirpath) {
   if (dirpath->empty()) {
     return;
   }
-  if (dirpath->rfind(L"\\") == dirpath->length()-1) {
-    dirpath->assign(dirpath->c_str(), dirpath->length()-1);
+  if (dirpath->at(dirpath->length()-1) == L'\\') {
+    dirpath->pop_back();
   }
 }
 
