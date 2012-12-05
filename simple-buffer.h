@@ -1,5 +1,5 @@
 /*
-** 简单自增长内存管理
+** 简单自增长自释放缓冲区管理
 ** author
 **   taoabc@gmail.com
 */
@@ -60,6 +60,10 @@ public:
     return buffer_;
   }
 
+  bool Reserve(size_t len) {
+    return Grow(len);
+  }
+
   void* Detach(void) {
     EnsureAtHeap();
     void* p = buffer_;
@@ -89,9 +93,11 @@ private:
     }
   }
 
+  //grow to new_size
   bool Grow(size_t new_size) {
+    //no need to grow
     if (new_size <= capacity_) {
-      return false;
+      return true;
     }
     void* new_buffer = NULL;
     //if use small buffer
@@ -119,7 +125,7 @@ private:
     }
     size_t new_capacity = capacity_;
     while (new_capacity < new_size) {
-      //use double space if step less then maximun step
+      //use double space if step less then maximum step
       new_capacity += min(new_capacity, kMaxStep_);
     }
     return new_capacity;
