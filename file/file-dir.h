@@ -45,7 +45,7 @@ inline void AddPathBackslash(std::wstring* dirpath) {
   if (dirpath->empty()) {
     return;
   }
-  if (dirpath->at(dirpath->length()-1) == L'\\') {
+  if (dirpath->at(dirpath->length()-1) != L'\\') {
     dirpath->push_back(L'\\');
   }
 }
@@ -65,9 +65,9 @@ inline void AppendPath(std::wstring* toappend,
     toappend->append(post);
 }
 
-inline ULONGLONG GetDriveFreeSpace(const std::wstring& drive) {
+inline ULONGLONG GetDiskFreeSpace(const std::wstring& directory) {
   ULARGE_INTEGER freespace;
-  ::GetDiskFreeSpaceEx(drive.c_str(), &freespace, NULL, NULL);
+  ::GetDiskFreeSpaceEx(directory.c_str(), &freespace, NULL, NULL);
   return freespace.QuadPart;
 }
 
@@ -83,7 +83,7 @@ inline std::wstring GetMaxFreeSpaceDrive(ULONGLONG* freesize = NULL) {
     DWORD i = 0;
     while (i <= buf_len) {
       if (DRIVE_FIXED == ::GetDriveType(drive_tmp)) {
-        ULONGLONG t = GetDriveFreeSpace(drive_tmp);
+        ULONGLONG t = GetDiskFreeSpace(drive_tmp);
         if (t > maxfree) {
           maxfree = t;
           drive = drive_tmp;
