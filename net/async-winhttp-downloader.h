@@ -62,7 +62,7 @@ public:
     callback_ = callback;
     self_destroy_ = self_destroy;
     dltype_ = kFile;
-    std::wstring file_folder(ult::GetUpperPath(file_path));
+    std::wstring file_folder(ult::GetUpperDirectory(file_path));
     ult::MakeSureFolderExist(file_folder);
     if (!file_.Create(file_path_, true)) {
       return ult::HttpStatus::kCreateFileError;

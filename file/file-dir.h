@@ -120,7 +120,7 @@ inline bool IsPathFileExist(const std::wstring& pathfile) {
   }
 }
 
-inline std::wstring GetUpperPath(const std::wstring& path) {
+inline std::wstring GetUpperDirectory(const std::wstring& path) {
   std::wstring tmp(path);
   ult::RemovePathBackslash(&tmp);
   int pos = tmp.rfind(L'\\');
@@ -130,6 +130,14 @@ inline std::wstring GetUpperPath(const std::wstring& path) {
   return std::wstring(tmp.c_str(), pos+1);
 }
 
+inline std::wstring GetRootDirectory(const std::wstring& path) {
+  int pos = path.find(L'\\');
+  if (pos != std::wstring::npos) {
+    return path.substr(0, pos);
+  }
+  return L"";
+}
+
 inline std::wstring GetSelfModulePath(void) {
   wchar_t buf[MAX_PATH];
   ::GetModuleFileName(NULL, buf, MAX_PATH);
@@ -137,13 +145,13 @@ inline std::wstring GetSelfModulePath(void) {
 }
 
 inline std::wstring GetSelfModuleDirectory(void) {
-  return GetUpperPath(ult::GetSelfModulePath());
+  return GetUpperDirectory(ult::GetSelfModulePath());
 }
 
 inline std::wstring GetNamedModuleDirectory(const std::wstring& module_name) {
   wchar_t buf[MAX_PATH];
   ::GetModuleFileName(GetModuleHandle(module_name.c_str()), buf, MAX_PATH);
-  return GetUpperPath(buf);
+  return GetUpperDirectory(buf);
 }
 
 inline bool MakeSureFolderExist(const std::wstring& folder_path) {
