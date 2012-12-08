@@ -10,6 +10,7 @@
 #include <windows.h>
 #include <shlobj.h>
 #include <shellapi.h>
+#include <vector>
 
 namespace ult {
 
@@ -71,29 +72,38 @@ inline ULONGLONG GetDiskFreeSpace(const std::wstring& directory) {
   return freespace.QuadPart;
 }
 
-inline std::wstring GetMaxFreeSpaceDrive(ULONGLONG* freesize = NULL) {
+inline std::vector<std::wstring> GetDriveInType(UINT type = DRIVE_FIXED) {
   DWORD buf_len = ::GetLogicalDriveStrings(0, NULL);
   wchar_t* buf = new wchar_t [buf_len];
 
-  std::wstring drive;
-  ULONGLONG maxfree = 0;
-
+  std::vector<std::wstring> vec;
   if (0 != ::GetLogicalDriveStrings(buf_len, buf)) {
     wchar_t* drive_tmp = buf;
     DWORD i = 0;
     while (i <= buf_len) {
-      if (DRIVE_FIXED == ::GetDriveType(drive_tmp)) {
-        ULONGLONG t = GetDiskFreeSpace(drive_tmp);
-        if (t > maxfree) {
-          maxfree = t;
-          drive = drive_tmp;
-        }
+      if (type == ::GetDriveType(drive_tmp)) {
+        vec.push_back(drive_tmp);
       }
       i += static_cast<DWORD>(wcslen(drive_tmp)) + 1;
       drive_tmp = buf + i;
     }
   }
   delete[] buf;
+  return vec;
+}
+
+inline std::wstring GetMaxFreeSpaceDrive(ULONGLONG* freesize = NULL) {
+  std::vector<std::wstring> vec = GetDriveInType();
+  ULONGLONG maxfree = 0;
+  std::wstring drive;
+  for (std::vector<std::wstring>::const_iterator iter = vec.begin();
+      iter != vec.end(); ++iter) {
+    ULONGLONG t = GetDiskFreeSpace(*iter);
+    if (t > maxfree) {
+      maxfree = t;
+      drive = *iter;
+    }
+  }
   if (freesize != NULL) {
     *freesize = maxfree;
   }
