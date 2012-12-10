@@ -122,6 +122,12 @@ inline std::wstring GetAppDataDirectory(void) {
   return buf;
 }
 
+inline std::wstring GetSystemDirectory(void) {
+  wchar_t buf[MAX_PATH];
+  ::SHGetFolderPath(NULL, CSIDL_SYSTEM, NULL, SHGFP_TYPE_CURRENT, buf);
+  return buf;
+}
+
 inline bool IsPathFileExist(const std::wstring& pathfile) {
   if (-1 != _waccess(pathfile.c_str(), 0)) {
     return true;
@@ -143,7 +149,7 @@ inline std::wstring GetUpperDirectory(const std::wstring& path) {
 inline std::wstring GetRootDirectory(const std::wstring& path) {
   int pos = path.find(L'\\');
   if (pos != std::wstring::npos) {
-    return path.substr(0, pos);
+    return path.substr(0, pos+1);
   }
   return L"";
 }
