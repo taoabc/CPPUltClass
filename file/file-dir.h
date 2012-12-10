@@ -148,6 +148,9 @@ inline std::wstring GetUpperDirectory(const std::wstring& path) {
 
 inline std::wstring GetRootDirectory(const std::wstring& path) {
   int pos = path.find(L'\\');
+  if (pos == 0) {
+    pos = path.find(L'\\', 2); 
+  }
   if (pos != std::wstring::npos) {
     return path.substr(0, pos+1);
   }
