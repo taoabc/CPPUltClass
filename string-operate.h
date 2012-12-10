@@ -13,37 +13,40 @@
 #include <Windows.h>
 #include <cwctype>
 #include <ctime>
+#include <cstdlib>
 
 namespace ult {
 
-namespace stringoperate {
+struct MultiByteToUnicodeDetail {
 
-inline std::wstring MultiByteToUnicode(const char* src, int len, unsigned int codepage) {
-  std::wstring dest;
-  if (len > 0) {
-    wchar_t* buf = new wchar_t[len];
-    int outlen = ::MultiByteToWideChar(codepage, 0, src, len, buf, len);
-    dest.assign(buf, outlen);
-    delete[] buf;
+  std::wstring operator()(const char* src, int len, unsigned int codepage) {
+    std::wstring result;
+    if (len > 0) {
+      wchar_t* buf = new wchar_t[len];
+      int outlen = ::MultiByteToWideChar(codepage, 0, src, len, buf, len);
+      result.assign(buf, outlen);
+      delete[] buf;
+    }
+    return result;
   }
-  return dest;
-}
+};
 
-inline std::string UnicodeToMultiByte(const wchar_t* src, int len, unsigned int codepage) {
-  std::string dest;
-  if (len > 0) {
-    char* buf = new char[len*3];
-    int outlen = ::WideCharToMultiByte(codepage, 0, src, len, buf, len*3, NULL, NULL);
-    dest.assign(buf, outlen);
-    delete[] buf;
+struct UnicodeToMultiByteDetail {
+
+  std::string operator()(const wchar_t* src, int len, unsigned int codepage) {
+    std::string result;
+    if (len > 0) {
+      char* buf = new char[len*3];
+      int outlen = ::WideCharToMultiByte(codepage, 0, src, len, buf, len*3, NULL, NULL);
+      result.assign(buf, outlen);
+      delete[] buf;
+    }
+    return result;
   }
-  return dest;
-}
-
-}
+};
 
 inline std::wstring Utf8ToUnicode(const char* src, int len) {
-  return stringoperate::MultiByteToUnicode(src, len, CP_UTF8);
+  return MultiByteToUnicodeDetail()(src, len, CP_UTF8);
 }
 
 inline std::wstring Utf8ToUnicode(const std::string& src) {
@@ -51,7 +54,7 @@ inline std::wstring Utf8ToUnicode(const std::string& src) {
 }
 
 inline std::string UnicodeToUtf8(const wchar_t* src, int len) {
-  return stringoperate::UnicodeToMultiByte(src, len, CP_UTF8);
+  return UnicodeToMultiByteDetail()(src, len, CP_UTF8);
 }
 
 inline std::string UnicodeToUtf8(const std::wstring& src) {
@@ -59,7 +62,7 @@ inline std::string UnicodeToUtf8(const std::wstring& src) {
 }
 
 inline std::wstring AnsiToUnicode(const char* src, int len) {
-  return stringoperate::MultiByteToUnicode(src, len, CP_ACP);
+  return MultiByteToUnicodeDetail()(src, len, CP_ACP);
 }
 
 inline std::wstring AnsiToUnicode(const std::string& src) {
@@ -67,7 +70,7 @@ inline std::wstring AnsiToUnicode(const std::string& src) {
 }
 
 inline std::string UnicodeToAnsi(const wchar_t* src, int len) {
-  return stringoperate::UnicodeToMultiByte(src, len, CP_ACP);
+  return UnicodeToMultiByteDetail()(src, len, CP_ACP);
 }
 
 inline std::string UnicodeToAnsi(const std::wstring& src) {
@@ -90,78 +93,89 @@ inline std::string Utf8ToAnsi(const std::string& src) {
   return UnicodeToAnsi(Utf8ToUnicode(src));
 }
 
-inline bool SplitString(const std::wstring& src,
-                        const std::wstring& separator,
-                        std::vector<std::wstring>* vec ) {
-  if (src.empty()) {
-    return false;
-  }
-  vec->clear();
-  if (separator.empty()) {
-    vec->push_back(src);
+struct SplitStringDetail {
+
+  bool operator()(const std::wstring& src, const std::wstring& separator, std::vector<std::wstring>* vec) {
+    if (src.empty()) {
+      return false;
+    }
+    vec->clear();
+    if (separator.empty()) {
+      vec->push_back(src);
+      return true;
+    }
+    int pos;
+    std::wstring tmp(src);
+    std::wstring item;
+    int separator_len = separator.length();
+    while ((pos = tmp.find(separator)) >= 0) {
+      item = tmp.substr(0, pos);
+      if (!item.empty()) {
+        vec->push_back(item);
+      }
+      tmp = tmp.substr(pos + separator_len);
+    }
+    if (!tmp.empty()) {
+      vec->push_back(tmp);
+    }
     return true;
   }
-  int pos;
-  std::wstring tmp(src);
-  std::wstring item;
-  int separator_len = separator.length();
-  while ((pos = tmp.find(separator)) >= 0) {
-    item = tmp.substr(0, pos);
-    if (!item.empty()) {
-      vec->push_back(item);
+};
+
+inline bool SplitString(const std::wstring& src,
+                        const std::wstring& separator,
+                        std::vector<std::wstring>* vec) {
+  return SplitStringDetail()(src, separator, vec);
+}
+
+struct CompareStringNoCaseDetail {
+
+  int operator()(const std::wstring& comp1, const std::wstring& comp2) {
+    int len1 = comp1.length();
+    int len2 = comp2.length();
+    if (len1 != len2) {
+      return len1 < len2 ? -1 : 1;
     }
-    tmp = tmp.substr(pos + separator_len);
+    for (int i = 0; i < len1; ++i) {
+      if (!EqWchar(comp1.at(i), comp2.at(i))) {
+        return LtWchar(comp1.at(i), comp2.at(i)) ? -1 : 1;
+      }
+    }
+    return 0;
   }
-  if (!tmp.empty()) {
-    vec->push_back(tmp);
+
+private:
+
+  bool EqWchar(const wchar_t& c1, const wchar_t& c2) {
+    return std::towupper(c1) == std::towupper(c2);
   }
-  return true;
-}
 
-namespace stringoperate {
-
-inline bool EqWchar(const wchar_t& c1, const wchar_t& c2) {
-  return std::towupper(c1) == std::towupper(c2);
-}
-
-inline bool LtWchar(const wchar_t& c1, const wchar_t& c2) {
-  return std::towupper(c1) < std::towupper(c2);
-}
-
-}
+  bool LtWchar(const wchar_t& c1, const wchar_t& c2) {
+    return std::towupper(c1) < std::towupper(c2);
+  }
+};
 
 inline int CompareStringNoCase(const std::wstring& comp1,
                                const std::wstring& comp2) {
-  int len1 = comp1.length();
-  int len2 = comp2.length();
-  if (len1 != len2) {
-    return len1 < len2 ? -1 : 1;
+  return CompareStringNoCaseDetail()(comp1, comp2);
+}
+
+struct UInt64ToStringDetail {
+
+  std::wstring operator()(unsigned __int64 num) {
+    wchar_t temp[32];
+    std::wstring result;
+    int pos = 0;
+    do {
+      temp[pos++] = (wchar_t)(L'0' + (int)(num % 10));
+      num /= 10;
+    } while (0 != num);
+    do {
+      result += temp[--pos];
+    } while (pos > 0);
+    return result;
   }
-  for (int i = 0; i < len1; ++i) {
-    if (!stringoperate::EqWchar(comp1.at(i), comp2.at(i))) {
-      return stringoperate::LtWchar(comp1.at(i), comp2.at(i)) ? -1 : 1;
-    }
-  }
-  return 0;
-}
-
-namespace stringoperate {
-
-inline std::wstring UInt64ToString(unsigned __int64 num) {
-  wchar_t temp[32];
-  std::wstring result;
-  int pos = 0;
-  do {
-    temp[pos++] = (wchar_t)(L'0' + (int)(num % 10));
-    num /= 10;
-  } while (0 != num);
-  do {
-    result += temp[--pos];
-  } while (pos > 0);
-  return result;
-}
-
-}
+};
 
 inline std::wstring IntToString(__int64 num) {
   std::wstring result;
@@ -169,43 +183,50 @@ inline std::wstring IntToString(__int64 num) {
     result += L'-';
     num = -num;
   }
-  result.append(stringoperate::UInt64ToString(num));
+  result.append(UInt64ToStringDetail()(num));
   return result;
 }
 
 inline std::wstring UIntToString(unsigned __int64 num) {
-  return stringoperate::UInt64ToString(num);
+  return UInt64ToStringDetail()(num);
 }
 
-inline std::string UrlEncode(const char* s, int len) {
-  std::string encoded;
-  char* buf = new char[16];
-  unsigned char c;
-  for (int i = 0; i < len; ++i) {
-    c = s[i];
-    if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
+struct UrlEncodeDetail {
+
+  std::string operator()(const char* s, size_t len) {
+    std::string encoded;
+    char* buf = new char[16];
+    unsigned char c;
+    for (size_t i = 0; i < len; ++i) {
+      c = s[i];
+      if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
         (c >= '0' && c <= '9') || c == '.' || c == '-' || c == '_' ||
         c == '!' || c == '~' || c == '*' || c == '\'' || c == '(' || c == ')') {
-      encoded += c;
-      continue;
+          encoded += c;
+          continue;
+      }
+      if (c == ' ') {
+        encoded += '+';
+        continue;
+      }
+      sprintf_s(buf, 16, "%x", c);
+      encoded += '%';
+      encoded += buf;
     }
-    if (c == ' ') {
-      encoded += '+';
-      continue;
-    }
-    sprintf_s(buf, 16, "%x", c);
-    encoded += '%';
-    encoded += buf;
+    delete[] buf;
+    return encoded;
   }
-  delete[] buf;
-  return encoded;
+};
+
+inline std::string UrlEncode(const char* s, size_t len) {
+  return UrlEncodeDetail()(s, len);
 }
 
 inline std::string UrlEncode(const std::string& s) {
   return UrlEncode(s.c_str(), s.length());
 }
 
-inline std::string UrlEncode(const wchar_t* s, int len) {
+inline std::string UrlEncode(const wchar_t* s, size_t len) {
   return UrlEncode(UnicodeToAnsi(s, len));
 }
 
@@ -213,26 +234,42 @@ inline std::string UrlEncode(const std::wstring& s) {
   return UrlEncode(UnicodeToAnsi(s));
 }
 
-inline std::wstring GetRandomString(const std::wstring& random_table,
-                                    const unsigned int len) {
-  std::wstring random_string;
-  if (len <= 0) {
-    return L"";
+struct GetRandomStringDetail {
+
+  std::wstring operator()(const size_t len, const std::wstring& random_table) {
+    std::wstring random_string;
+    std::wstring random_table_real(random_table);
+    if (random_table_real.empty()) {
+      random_table_real = L"1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    }
+    size_t sreal = random_table_real.length();
+    for (size_t i = 0; i < len; ++i) {
+      int r = GetRandomInteger(0, sreal);
+      random_string.push_back(random_table_real.at(r));
+    }
+    return random_string;
   }
-  std::wstring random_table_real(random_table);
-  if (random_table_real.empty()) {
-    random_table_real = L"1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+  GetRandomStringDetail(void) {
+    SRand();
   }
-  static bool seeded = false;
-  if (!seeded) {
-    srand((unsigned int)time(NULL));
-    seeded = true;
+
+private:
+
+  int GetRandomInteger(int min_number, int max_number) {
+    if (min_number > max_number) {
+      std::swap(min_number, max_number);
+    }
+    return (int)((double)std::rand() / (RAND_MAX + 1) * (max_number - min_number) + min_number);
   }
-  for (unsigned i = 0; i < len; ++i) {
-    int r = rand() % (random_table_real.length());
-    random_string += random_table_real.at(r);
+
+  void SRand(void) {
+    std::srand((unsigned int)std::time(NULL));
   }
-  return random_string;
+};
+
+inline std::wstring GetRandomString(const size_t len, const std::wstring& random_table = L"") {
+  return GetRandomStringDetail()(len, random_table);
 }
 
 } //namespace ult

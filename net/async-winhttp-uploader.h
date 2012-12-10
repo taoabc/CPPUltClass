@@ -53,7 +53,7 @@ public:
     this->Close();
     //init boundary
     wboundary_ = L"----------";
-    wboundary_ += ult::GetRandomString(L"", 30);
+    wboundary_ += ult::GetRandomString(30);
     aboundary_ = ult::UnicodeToAnsi(wboundary_);
     //return
     return ult::HttpStatus::kSuccess;
