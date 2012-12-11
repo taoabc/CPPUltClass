@@ -17,8 +17,9 @@
 
 namespace ult {
 
-struct MultiByteToUnicodeDetail {
+namespace detail {
 
+struct MultiByteToUnicode {
   std::wstring operator()(const char* src, int len, unsigned int codepage) {
     std::wstring result;
     if (len > 0) {
@@ -31,8 +32,7 @@ struct MultiByteToUnicodeDetail {
   }
 };
 
-struct UnicodeToMultiByteDetail {
-
+struct UnicodeToMultiByte {
   std::string operator()(const wchar_t* src, int len, unsigned int codepage) {
     std::string result;
     if (len > 0) {
@@ -45,57 +45,11 @@ struct UnicodeToMultiByteDetail {
   }
 };
 
-inline std::wstring Utf8ToUnicode(const char* src, int len) {
-  return MultiByteToUnicodeDetail()(src, len, CP_UTF8);
-}
-
-inline std::wstring Utf8ToUnicode(const std::string& src) {
-  return Utf8ToUnicode(src.c_str(), static_cast<int>(src.length()));
-}
-
-inline std::string UnicodeToUtf8(const wchar_t* src, int len) {
-  return UnicodeToMultiByteDetail()(src, len, CP_UTF8);
-}
-
-inline std::string UnicodeToUtf8(const std::wstring& src) {
-  return UnicodeToUtf8(src.c_str(), static_cast<int>(src.length()));
-}
-
-inline std::wstring AnsiToUnicode(const char* src, int len) {
-  return MultiByteToUnicodeDetail()(src, len, CP_ACP);
-}
-
-inline std::wstring AnsiToUnicode(const std::string& src) {
-  return AnsiToUnicode(src.c_str(), static_cast<int>(src.length()));
-}
-
-inline std::string UnicodeToAnsi(const wchar_t* src, int len) {
-  return UnicodeToMultiByteDetail()(src, len, CP_ACP);
-}
-
-inline std::string UnicodeToAnsi(const std::wstring& src) {
-  return UnicodeToAnsi(src.c_str(), static_cast<int>(src.length()));
-}
-
-inline std::string AnsiToUtf8(const char* src, int len) {
-  return UnicodeToUtf8(AnsiToUnicode(src, len));
-}
-
-inline std::string AnsiToUtf8(const std::string& src) {
-  return UnicodeToUtf8(AnsiToUnicode(src));
-}
-
-inline std::string Utf8ToAnsi(const char* src, int len) {
-  return UnicodeToAnsi(Utf8ToUnicode(src, len));
-}
-
-inline std::string Utf8ToAnsi(const std::string& src) {
-  return UnicodeToAnsi(Utf8ToUnicode(src));
-}
-
-struct SplitStringDetail {
-
-  bool operator()(const std::wstring& src, const std::wstring& separator, std::vector<std::wstring>* vec) {
+struct SplitString {
+  bool operator()(
+      const std::wstring& src,
+      const std::wstring& separator,
+      std::vector<std::wstring>* vec) {
     if (src.empty()) {
       return false;
     }
@@ -122,14 +76,7 @@ struct SplitStringDetail {
   }
 };
 
-inline bool SplitString(const std::wstring& src,
-                        const std::wstring& separator,
-                        std::vector<std::wstring>* vec) {
-  return SplitStringDetail()(src, separator, vec);
-}
-
-struct CompareStringNoCaseDetail {
-
+struct CompareStringNoCase {
   int operator()(const std::wstring& comp1, const std::wstring& comp2) {
     int len1 = comp1.length();
     int len2 = comp2.length();
@@ -145,7 +92,6 @@ struct CompareStringNoCaseDetail {
   }
 
 private:
-
   bool EqWchar(const wchar_t& c1, const wchar_t& c2) {
     return std::towupper(c1) == std::towupper(c2);
   }
@@ -155,13 +101,7 @@ private:
   }
 };
 
-inline int CompareStringNoCase(const std::wstring& comp1,
-                               const std::wstring& comp2) {
-  return CompareStringNoCaseDetail()(comp1, comp2);
-}
-
-struct UInt64ToStringDetail {
-
+struct UInt64ToString {
   std::wstring operator()(unsigned __int64 num) {
     wchar_t temp[32];
     std::wstring result;
@@ -177,22 +117,8 @@ struct UInt64ToStringDetail {
   }
 };
 
-inline std::wstring IntToString(__int64 num) {
-  std::wstring result;
-  if (num < 0) {
-    result += L'-';
-    num = -num;
-  }
-  result.append(UInt64ToStringDetail()(num));
-  return result;
-}
 
-inline std::wstring UIntToString(unsigned __int64 num) {
-  return UInt64ToStringDetail()(num);
-}
-
-struct UrlEncodeDetail {
-
+struct UrlEncode {
   std::string operator()(const char* s, size_t len) {
     std::string encoded;
     char* buf = new char[16];
@@ -218,24 +144,8 @@ struct UrlEncodeDetail {
   }
 };
 
-inline std::string UrlEncode(const char* s, size_t len) {
-  return UrlEncodeDetail()(s, len);
-}
 
-inline std::string UrlEncode(const std::string& s) {
-  return UrlEncode(s.c_str(), s.length());
-}
-
-inline std::string UrlEncode(const wchar_t* s, size_t len) {
-  return UrlEncode(UnicodeToAnsi(s, len));
-}
-
-inline std::string UrlEncode(const std::wstring& s) {
-  return UrlEncode(UnicodeToAnsi(s));
-}
-
-struct GetRandomStringDetail {
-
+struct GetRandomString {
   std::wstring operator()(const size_t len, const std::wstring& random_table) {
     std::wstring random_string;
     std::wstring random_table_real(random_table);
@@ -250,12 +160,11 @@ struct GetRandomStringDetail {
     return random_string;
   }
 
-  GetRandomStringDetail(void) {
+  GetRandomString(void) {
     SRand();
   }
 
 private:
-
   int GetRandomInteger(int min_number, int max_number) {
     if (min_number > max_number) {
       std::swap(min_number, max_number);
@@ -268,8 +177,99 @@ private:
   }
 };
 
+} //namespace detail
+
+inline std::wstring Utf8ToUnicode(const char* src, int len) {
+  return detail::MultiByteToUnicode()(src, len, CP_UTF8);
+}
+
+inline std::wstring Utf8ToUnicode(const std::string& src) {
+  return Utf8ToUnicode(src.c_str(), static_cast<int>(src.length()));
+}
+
+inline std::string UnicodeToUtf8(const wchar_t* src, int len) {
+  return detail::UnicodeToMultiByte()(src, len, CP_UTF8);
+}
+
+inline std::string UnicodeToUtf8(const std::wstring& src) {
+  return UnicodeToUtf8(src.c_str(), static_cast<int>(src.length()));
+}
+
+inline std::wstring AnsiToUnicode(const char* src, int len) {
+  return detail::MultiByteToUnicode()(src, len, CP_ACP);
+}
+
+inline std::wstring AnsiToUnicode(const std::string& src) {
+  return AnsiToUnicode(src.c_str(), static_cast<int>(src.length()));
+}
+
+inline std::string UnicodeToAnsi(const wchar_t* src, int len) {
+  return detail::UnicodeToMultiByte()(src, len, CP_ACP);
+}
+
+inline std::string UnicodeToAnsi(const std::wstring& src) {
+  return UnicodeToAnsi(src.c_str(), static_cast<int>(src.length()));
+}
+
+inline std::string AnsiToUtf8(const char* src, int len) {
+  return UnicodeToUtf8(AnsiToUnicode(src, len));
+}
+
+inline std::string AnsiToUtf8(const std::string& src) {
+  return UnicodeToUtf8(AnsiToUnicode(src));
+}
+
+inline std::string Utf8ToAnsi(const char* src, int len) {
+  return UnicodeToAnsi(Utf8ToUnicode(src, len));
+}
+
+inline std::string Utf8ToAnsi(const std::string& src) {
+  return UnicodeToAnsi(Utf8ToUnicode(src));
+}
+
+inline bool SplitString(const std::wstring& src,
+                        const std::wstring& separator,
+                        std::vector<std::wstring>* vec) {
+  return detail::SplitString()(src, separator, vec);
+}
+
+inline int CompareStringNoCase(const std::wstring& comp1,
+                               const std::wstring& comp2) {
+  return detail::CompareStringNoCase()(comp1, comp2);
+}
+
+inline std::wstring IntToString(__int64 num) {
+  std::wstring result;
+  if (num < 0) {
+    result += L'-';
+    num = -num;
+  }
+  result.append(detail::UInt64ToString()(num));
+  return result;
+}
+
+inline std::wstring UIntToString(unsigned __int64 num) {
+  return detail::UInt64ToString()(num);
+}
+
+inline std::string UrlEncode(const char* s, size_t len) {
+  return detail::UrlEncode()(s, len);
+}
+
+inline std::string UrlEncode(const std::string& s) {
+  return UrlEncode(s.c_str(), s.length());
+}
+
+inline std::string UrlEncode(const wchar_t* s, size_t len) {
+  return UrlEncode(UnicodeToAnsi(s, len));
+}
+
+inline std::string UrlEncode(const std::wstring& s) {
+  return UrlEncode(UnicodeToAnsi(s));
+}
+
 inline std::wstring GetRandomString(const size_t len, const std::wstring& random_table = L"") {
-  return GetRandomStringDetail()(len, random_table);
+  return detail::GetRandomString()(len, random_table);
 }
 
 } //namespace ult
