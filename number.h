@@ -69,7 +69,7 @@ private:
     static const unsigned __int64 kMax = (unsigned __int64)1 << 31;
     while (*numberator > kMax) {
       *numberator >>= 1;
-      *denominator >>= 2;
+      *denominator >>= 1;
     }
   }
 };
