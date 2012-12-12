@@ -164,6 +164,17 @@ struct RecursiveRemoveDirectory {
   }
 };
 
+struct GetFolderPath {
+  std::wstring operator()(int csidl, HANDLE htoken, DWORD flags) {
+    wchar_t buffer[MAX_PATH];
+    HRESULT hr = ::SHGetFolderPath(NULL, csidl, htoken, flags, buffer);
+    if (FAILED(hr)) {
+      return L"";
+    }
+    return buffer;
+  }
+};
+
 } /* namespace detail */
 
 inline void ToPurenameAndExtension(
@@ -207,22 +218,20 @@ inline std::wstring GetMaxFreeSpaceDrive(ULONGLONG* freesize = NULL) {
   return detail::GetMaxFreeSpaceDrive()(freesize);
 }
 
+inline std::wstring GetFolderPath(int csidl, HANDLE htoken = NULL, DWORD flags = SHGFP_TYPE_CURRENT) {
+  return detail::GetFolderPath()(csidl, htoken, flags);
+}
+
 inline std::wstring GetProgramFilesDirectory(void) {
-  wchar_t buf[MAX_PATH];
-  ::SHGetFolderPath(NULL, CSIDL_PROGRAM_FILES | CSIDL_FLAG_CREATE, NULL, SHGFP_TYPE_CURRENT, buf);
-  return buf;
+  return GetFolderPath(CSIDL_PROGRAM_FILES | CSIDL_FLAG_CREATE);
 }
 
 inline std::wstring GetAppDataDirectory(void) {
-  wchar_t buf[MAX_PATH];
-  ::SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE, NULL, SHGFP_TYPE_CURRENT, buf);
-  return buf;
+  return GetFolderPath(CSIDL_APPDATA | CSIDL_FLAG_CREATE);
 }
 
 inline std::wstring GetSystemDirectory(void) {
-  wchar_t buf[MAX_PATH];
-  ::SHGetFolderPath(NULL, CSIDL_SYSTEM, NULL, SHGFP_TYPE_CURRENT, buf);
-  return buf;
+  return GetFolderPath(CSIDL_SYSTEM);
 }
 
 inline bool IsPathFileExist(const std::wstring& pathfile) {
