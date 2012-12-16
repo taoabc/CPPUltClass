@@ -97,7 +97,9 @@ struct GetDriveInType {
 struct GetDiskFreeSpace {
   ULONGLONG operator()(const std::wstring& directory) {
     ULARGE_INTEGER freespace;
-    ::GetDiskFreeSpaceEx(directory.c_str(), &freespace, NULL, NULL);
+    if (FALSE == ::GetDiskFreeSpaceEx(directory.c_str(), &freespace, NULL, NULL)) {
+      return static_cast<ULONGLONG>(-1);
+    }
     return freespace.QuadPart;
   }
 };
@@ -175,6 +177,20 @@ struct GetFolderPath {
   }
 };
 
+struct GetFileSize {
+  ULONGLONG operator()(const std::wstring& file) {
+    WIN32_FILE_ATTRIBUTE_DATA fad;
+    if (FALSE == ::GetFileAttributesEx(file.c_str(), ::GetFileExInfoStandard, &fad)) {
+      return static_cast<ULONGLONG>(-1);
+    }
+    if ((fad.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0) {
+      return static_cast<ULONGLONG>(-1);
+    }
+    return (static_cast<ULONGLONG>(fad.nFileSizeHigh)
+        << (sizeof(fad.nFileSizeHigh)*8)) + fad.nFileSizeLow;
+  }
+};
+
 } /* namespace detail */
 
 inline void ToPurenameAndExtension(
@@ -190,6 +206,10 @@ inline void ToUpperpathAndFilename(
     std::wstring* filename,
     const std::wstring& pathseparator = L"\\") {
   detail::ToUpperpathAndFilename()(fullpath, pathprefix, filename, pathseparator);
+}
+
+inline ULONGLONG GetFileSize(const std::wstring& file) {
+  return detail::GetFileSize()(file);
 }
 
 inline void AddPathBackslash(std::wstring* dirpath) {
@@ -247,7 +267,7 @@ inline std::wstring GetUpperDirectory(const std::wstring& path) {
   ult::RemovePathBackslash(&tmp);
   int pos = tmp.rfind(L'\\');
   if (pos == std::wstring::npos) {
-    return false;
+    return L"";
   }
   return std::wstring(tmp.c_str(), pos+1);
 }
