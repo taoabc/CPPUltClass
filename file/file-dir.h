@@ -94,10 +94,24 @@ struct GetDriveInType {
   }
 };
 
+struct GetRootDirectory {
+  std::wstring operator()(const std::wstring& path) {
+    int pos = path.find(L'\\');
+    if (pos == 0) {
+      pos = path.find(L'\\', 2); 
+    }
+    if (pos != std::wstring::npos) {
+      return path.substr(0, pos+1);
+    }
+    return L"";
+  }
+};
+
 struct GetDiskFreeSpace {
   ULONGLONG operator()(const std::wstring& directory) {
+    const std::wstring root_dir = GetRootDirectory()(directory);
     ULARGE_INTEGER freespace;
-    if (FALSE == ::GetDiskFreeSpaceEx(directory.c_str(), &freespace, NULL, NULL)) {
+    if (FALSE == ::GetDiskFreeSpaceEx(root_dir.c_str(), &freespace, NULL, NULL)) {
       return static_cast<ULONGLONG>(-1);
     }
     return freespace.QuadPart;
@@ -191,6 +205,18 @@ struct GetFileSize {
   }
 };
 
+struct  GetUpperDirectory {
+  std::wstring operator()(const std::wstring& path) {
+    std::wstring tmp(path);
+    RemovePathBackslash()(&tmp);
+    int pos = tmp.rfind(L'\\');
+    if (pos == std::wstring::npos) {
+      return L"";
+    }
+    return tmp.substr(0, pos+1);
+  }
+};
+
 } /* namespace detail */
 
 inline void ToPurenameAndExtension(
@@ -273,14 +299,7 @@ inline std::wstring GetUpperDirectory(const std::wstring& path) {
 }
 
 inline std::wstring GetRootDirectory(const std::wstring& path) {
-  int pos = path.find(L'\\');
-  if (pos == 0) {
-    pos = path.find(L'\\', 2); 
-  }
-  if (pos != std::wstring::npos) {
-    return path.substr(0, pos+1);
-  }
-  return L"";
+  return detail::GetRootDirectory()(path);
 }
 
 inline std::wstring GetSelfModulePath(void) {
