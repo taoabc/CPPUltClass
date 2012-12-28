@@ -6,8 +6,8 @@
 #ifndef ULT_FILE_FILEIO_H_
 #define ULT_FILE_FILEIO_H_
 
-#include <string>
 #include <windows.h>
+#include <string>
 
 namespace ult {
 
@@ -48,7 +48,7 @@ public:
     if (hfile_ == NULL) {
       return true;
     }
-    if (!::CloseHandle(hfile_)) {
+    if (FALSE == ::CloseHandle(hfile_)) {
       return false;
     }
     hfile_ = NULL;
@@ -109,7 +109,7 @@ public:
   bool SetFileTime(const FILETIME* creation_time,
                    const FILETIME* lastaccess_time,
                    const FILETIME* lastwrite_time) {
-    return (::SetFileTime(hfile_, creation_time, lastaccess_time, lastwrite_time) != 0);
+    return (TRUE == ::SetFileTime(hfile_, creation_time, lastaccess_time, lastwrite_time));
   }
 
   bool Seek(__int64 distance, __int64* new_position, DWORD move_method) {
@@ -186,7 +186,7 @@ public:
       toread = kChunkSizeMax_;
     }
     DWORD readed_once = 0;
-    bool ret = (::ReadFile(hfile_, buffer, toread, &readed_once, NULL) != 0);
+    bool ret = (TRUE == ::ReadFile(hfile_, buffer, toread, &readed_once, NULL));
     *readed = readed_once;
     return ret;
   }
@@ -196,7 +196,7 @@ public:
       towrite = kChunkSizeMax_;
     }
     DWORD writed_once = 0;
-    bool ret = (::WriteFile(hfile_, buffer, towrite, &writed_once, NULL) != 0);
+    bool ret = (TRUE == ::WriteFile(hfile_, buffer, towrite, &writed_once, NULL));
     *written = writed_once;
     return ret;
   }
