@@ -126,7 +126,7 @@ private:
     size_t new_capacity = capacity_;
     while (new_capacity < new_size) {
       //use double space if step less then maximum step
-      new_capacity += min(new_capacity, kMaxStep_);
+      new_capacity += (new_capacity > kMaxStep_ ? kMaxStep_ : new_capacity);
     }
     return new_capacity;
   }

@@ -7,6 +7,8 @@
 #ifndef ULT_COMPTR_H_
 #define ULT_COMPTR_H_
 
+#include <Windows.h>
+
 template <typename T>
 inline bool IsNull(const T& p) {
   return (p == NULL || p == nullptr);

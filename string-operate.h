@@ -62,7 +62,7 @@ struct SplitString {
     std::wstring tmp(src);
     std::wstring item;
     int separator_len = separator.length();
-    while ((pos = tmp.find(separator)) >= 0) {
+    while ((pos = tmp.find(separator)) != std::wstring::npos) {
       item = tmp.substr(0, pos);
       if (!item.empty()) {
         vec->push_back(item);
