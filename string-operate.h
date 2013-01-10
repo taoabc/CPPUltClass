@@ -3,7 +3,6 @@
 ** author
 **   taoabc@gmail.com
 ** 为了方便函数返回字符直接进行操作，字符串操作头文件中的函数大部分通过返回值返回
-** 其它文件为了效率考虑，统一使用返回参数
 */
 #ifndef ULT_STRING_OPERATE_H_
 #define ULT_STRING_OPERATE_H_

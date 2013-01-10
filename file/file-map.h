@@ -33,11 +33,11 @@ public:
     if (file_ == INVALID_HANDLE_VALUE) {
       return false;
     }
-    dwaccess_ = dwaccess;
     return true;
   }
 
   bool CreateMapping(ULONGLONG maximum_size = 0, DWORD flprotect = PAGE_READONLY) {
+    UnmapView();
     CloseMapping();
     if (0 == this->GetSize()) {
       return false;
@@ -55,7 +55,7 @@ public:
     ULONGLONG real_offset = GranularityFloor(offset, glt);
     DWORD distance = static_cast<DWORD>(offset - real_offset);
     SIZE_T real_map_bytes = map_bytes + distance;
-    pfile_view_ = ::MapViewOfFile(file_mapping_, dwview_access_, real_offset >> 32, real_offset & 0xffffffff, real_map_bytes);
+    pfile_view_ = ::MapViewOfFile(file_mapping_, dwaccess, real_offset >> 32, real_offset & 0xffffffff, real_map_bytes);
     return static_cast<void*>((unsigned char*)pfile_view_ + distance);
   }
 
@@ -123,8 +123,6 @@ private:
     }
   }
 
-  DWORD dwaccess_;
-  DWORD dwview_access_;
   HANDLE file_;
   HANDLE file_mapping_;
   PVOID pfile_view_;
