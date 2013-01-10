@@ -7,6 +7,7 @@
 #define uLT_FILE_FILEMAP_H_
 
 #include <windows.h>
+#include <cassert>
 #include <string>
 
 namespace ult {
@@ -36,43 +37,32 @@ public:
     return true;
   }
 
-  bool CreateMapping(void) {
-    DWORD dwprotect;
-    if (dwaccess_ == GENERIC_READ) {
-      dwprotect = PAGE_READONLY;
-      dwview_access_ = FILE_MAP_READ;
-    } else if (dwaccess_ == (GENERIC_READ | GENERIC_WRITE)) {
-      dwprotect = PAGE_READWRITE;
-      dwview_access_ = FILE_MAP_WRITE;
-    } else if (dwaccess_ == (GENERIC_READ| GENERIC_EXECUTE)) {
-      dwprotect = PAGE_EXECUTE_READ;
-      dwview_access_ = FILE_MAP_EXECUTE;
-    } else if (dwaccess_ == (GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE)) {
-      dwprotect = PAGE_EXECUTE_READWRITE;
-      dwview_access_ = FILE_MAP_EXECUTE;
-    }
-    unsigned __int64 filesize = this->GetSize();
-    if (filesize == 0) {
+  bool CreateMapping(ULONGLONG maximum_size = 0, DWORD flprotect = PAGE_READONLY) {
+    CloseMapping();
+    if (0 == this->GetSize()) {
       return false;
     }
-    UnmapView();
-    CloseMapping();
-    file_mapping_ = ::CreateFileMapping(file_, NULL, dwprotect, 0, 0, NULL);
+    file_mapping_ = ::CreateFileMapping(file_, NULL, flprotect, maximum_size >> 32, maximum_size & 0xffffffff, NULL);
     if (file_mapping_ == NULL) {
       return false;
     }
     return true;
   }
   
-  void* MapView(UINT64 offset, SIZE_T map_bytes) {
+  void* MapView(ULONGLONG offset, SIZE_T map_bytes, DWORD dwaccess = FILE_MAP_READ) {
     UnmapView();
-    pfile_view_ = ::MapViewOfFile(file_mapping_, dwview_access_, offset >> 32, offset & 0xffffffff, map_bytes);
-    return pfile_view_;
+    DWORD glt = GetAllocationGranularity();
+    ULONGLONG real_offset = GranularityFloor(offset, glt);
+    DWORD distance = static_cast<DWORD>(offset - real_offset);
+    SIZE_T real_map_bytes = map_bytes + distance;
+    pfile_view_ = ::MapViewOfFile(file_mapping_, dwview_access_, real_offset >> 32, real_offset & 0xffffffff, real_map_bytes);
+    return static_cast<void*>((unsigned char*)pfile_view_ + distance);
   }
 
-  void UnmapView(LPVOID view) {
-    if (view != NULL) {
-      ::UnmapViewOfFile(view);
+  void UnmapView(void) {
+    if (pfile_view_ != NULL) {
+      ::UnmapViewOfFile(pfile_view_);
+      pfile_view_ = NULL;
     }
   }
   
@@ -82,22 +72,41 @@ public:
     CloseFile();
   }
 
-  unsigned __int64 GetSize(void) {
+  ULONGLONG GetSize(void) {
     DWORD size_high;
     DWORD size_low = ::GetFileSize(file_, &size_high);
     if (size_low == INVALID_FILE_SIZE && GetLastError != NO_ERROR) {
       return 0;
     }
-    return (((unsigned __int64)size_high) << 32) + size_low;
+    return (((ULONGLONG)size_high) << 32) + size_low;
   }
 
 private:
 
-  void UnmapView(void) {
-    if (pfile_view_ != NULL) {
-      ::UnmapViewOfFile(pfile_view_);
-      pfile_view_ = NULL;
+  DWORD GetAllocationGranularity(void) {
+    static DWORD glt = 0;
+    if (glt == 0) {
+      SYSTEM_INFO sys_info;
+      ::GetSystemInfo(&sys_info);
+      glt = sys_info.dwAllocationGranularity;
     }
+    return glt;
+  }
+
+  ULONGLONG GranularityCeil(ULONGLONG number, ULONGLONG granularity) {
+    assert(granularity != 0);
+    while (number % granularity != 0) {
+      ++number;
+    }
+    return number;
+  }
+
+  ULONGLONG GranularityFloor(ULONGLONG number, ULONGLONG granularity) {
+    assert(granularity != 0);
+    while (number % granularity != 0) {
+      --number;
+    }
+    return number;
   }
 
   void CloseMapping(void) {
@@ -121,4 +130,5 @@ private:
   PVOID pfile_view_;
 }; //class FileMap
 } //namespace ult
+
 #endif

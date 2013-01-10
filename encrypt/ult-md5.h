@@ -15,6 +15,7 @@
 #include <string>
 #include <windows.h>
 #include <algorithm>
+#include <iostream>
 
 namespace ult {
   
@@ -40,25 +41,24 @@ inline std::wstring MD5File(const std::wstring& file_name) {
   if (!file_map.Open(file_name)) {
     return L"";
   }
-  UINT64 file_size = file_map.GetSize();
+  ULONGLONG file_size = file_map.GetSize();
   if (file_size == 0) {
     return L"";
   }
+  std::cout << "file size " << file_size << std::endl;
   md5_state_s state;
   md5_byte_t digest[16];
-  char hex_output[16*2 + 1];
 
   md5_init(&state);
   if (!file_map.CreateMapping()) {
     return L"";
   }
   LPVOID file_view = NULL;
-  UINT64 cursor = 0;
+  ULONGLONG cursor = 0;
   //get allocation granularity
-  SYSTEM_INFO sys_info;
-  ::GetSystemInfo(&sys_info);
-  DWORD glt = sys_info.dwAllocationGranularity;
-  DWORD map_size = 0xffffffff - 0xffffffff % glt;
+  DWORD map_size = -1;
+  //minimum map size to try map file, 0x100000 B = 1 MB
+  static const DWORD minimum_map_size = 0x100000;
   //main loop to read file from map view
   while (cursor < file_size) {
     //first part try and last part may trigger this
@@ -67,23 +67,13 @@ inline std::wstring MD5File(const std::wstring& file_name) {
     }
     //sub loop to try a situable size of file view
     do {
-      //only first part try and last part
-      //map_size may not be multiple of the allocation granularity
-      //当尝试第一块数据的时候，如果大小没有跟分配粒度对齐
-      //那么这个大小必定是文件大小，所以，如果成功，就不会出现两次映射的情况
-      //当尝试中间块数据的时候，则表明已经出现过映射未成功的现象
-      //那么不会触发上一句的map_size重新赋值，则map_size仍然为分配粒度的整数倍
-      //如果是尝试读最后一块，那么下一次就不需要再读取，所以map_size是否为分配粒度无关
       file_view = file_map.MapView(cursor, map_size);
       if (file_view == NULL) {
-        map_size >>= 1; 
-        //the offset must be a multiple of the allocation granularity
-        //plus a glt is avoid always calc 3 times than 2 times
-        //确保大小为分配粒度的整数倍，向上多取一个粒度是为了保证在取一半文件大小的时候
-        //如果是向下减掉一个粒度，那么读文件，需要多读几次，最后一段势必相当小
-        map_size = (map_size + glt-1) - (map_size + glt-1) % glt;
+        std::cout << "map size " << map_size << " failed" << std::endl;
+        map_size >>= 1;
       }
     } while (file_view == NULL && map_size > 0x100000);
+    std::cout << "map size succeed " << map_size << std::endl;
     //if success, deal with it
     if (file_view != NULL) {
       md5_append(&state, (const md5_byte_t*)file_view, map_size);
@@ -93,6 +83,7 @@ inline std::wstring MD5File(const std::wstring& file_name) {
     }
   }
   md5_finish(&state, digest);
+  char hex_output[16*2 + 1];
   for (int di = 0; di < 16; ++di) {
     sprintf_s(hex_output + di * 2, 3, "%02x", digest[di]);
   }

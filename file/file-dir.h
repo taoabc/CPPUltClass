@@ -201,7 +201,7 @@ struct GetFileSize {
       return static_cast<ULONGLONG>(-1);
     }
     return (static_cast<ULONGLONG>(fad.nFileSizeHigh)
-        << (sizeof(fad.nFileSizeHigh)*8)) + fad.nFileSizeLow;
+        << (sizeof(fad.nFileSizeLow)*8)) + fad.nFileSizeLow;
   }
 };
 
