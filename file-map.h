@@ -36,7 +36,7 @@ public:
   }
 
   bool CreateMapping(DWORD flprotect = PAGE_READONLY, ULONGLONG maximum_size = 0) {
-    if (0 == this->GetSize()) {
+    if (0 == this->GetFileSize()) {
       return false;
     }
     file_mapping_ = ::CreateFileMapping(file_, NULL, flprotect, maximum_size >> 32, maximum_size & 0xffffffff, NULL);
@@ -69,7 +69,7 @@ public:
     CloseFile();
   }
 
-  ULONGLONG GetSize(void) {
+  ULONGLONG GetFileSize(void) {
     DWORD size_high;
     DWORD size_low = ::GetFileSize(file_, &size_high);
     if (size_low == INVALID_FILE_SIZE && GetLastError != NO_ERROR) {

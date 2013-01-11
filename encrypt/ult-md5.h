@@ -44,7 +44,7 @@ struct MD5File {
     if (!file_map.Open(file_name)) {
       return L"";
     }
-    ULONGLONG file_size = file_map.GetSize();
+    ULONGLONG file_size = file_map.GetFileSize();
     if (file_size == 0) {
       return L"";
     }
