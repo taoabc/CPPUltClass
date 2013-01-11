@@ -4,7 +4,7 @@
 **   taoabc@gmail.com
 */
 #ifndef ULT_FILE_FILEMAP_H_
-#define uLT_FILE_FILEMAP_H_
+#define ULT_FILE_FILEMAP_H_
 
 #include <windows.h>
 #include <cassert>
@@ -27,7 +27,6 @@ public:
   }
 
   bool Open(const std::wstring& filename, DWORD dwaccess = GENERIC_READ) {
-    Close();
     file_ = ::CreateFile(filename.c_str(), dwaccess, FILE_SHARE_READ, NULL,
       OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (file_ == INVALID_HANDLE_VALUE) {
@@ -37,8 +36,6 @@ public:
   }
 
   bool CreateMapping(DWORD flprotect = PAGE_READONLY, ULONGLONG maximum_size = 0) {
-    UnmapView();
-    CloseMapping();
     if (0 == this->GetSize()) {
       return false;
     }
