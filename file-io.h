@@ -148,9 +148,6 @@ public:
     do {
       bool ret = ReadPart(buffer, toread, &readed_once);
       *readed += readed_once;
-      if (*readed > t) {
-        int a = 0;
-      }
       if (!ret) {
         return false;
       }
