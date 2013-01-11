@@ -36,7 +36,7 @@ public:
     return true;
   }
 
-  bool CreateMapping(ULONGLONG maximum_size = 0, DWORD flprotect = PAGE_READONLY) {
+  bool CreateMapping(DWORD flprotect = PAGE_READONLY, ULONGLONG maximum_size = 0) {
     UnmapView();
     CloseMapping();
     if (0 == this->GetSize()) {
