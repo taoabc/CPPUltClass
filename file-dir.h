@@ -249,7 +249,11 @@ inline void RemovePathBackslash(std::wstring* dirpath) {
 inline void AppendPath(std::wstring* toappend,
                        const std::wstring& post) {
   AddPathBackslash(toappend);
-  toappend->append(post);
+  if (post.at(0) == L'\\') {
+    toappend->append(post.c_str()+1);
+  } else {
+    toappend->append(post);
+  }
 }
 
 inline ULONGLONG GetDiskFreeSpace(const std::wstring& directory) {
