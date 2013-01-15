@@ -13,28 +13,37 @@
 #include "../simple-buffer.h"
 #include "../file-io.h"
 #include "../file-dir.h"
+#include <basetyps.h>
+#include <Unknwn.h>
 
 #include <string>
 
 namespace ult {
 
-struct IAsyncWinHttpEvent {
-  virtual void StringHandle(
-      unsigned id,
-      int status,
-      unsigned downloaded,
-      unsigned total_size,
-      void* buffer,
-      unsigned len) = 0;
-  virtual void FileHandle(
-      unsigned id,
-      int status,
-      unsigned downloaded,
-      unsigned total_size,
-      const std::wstring& file_path) = 0;
+interface IAsyncHttpEvent {
+  STDMETHOD(SetStatus)(LONG status) PURE;
+  STDMETHOD(SetTotal)(ULONGLONG total) PURE;
+  STDMETHOD(SetCompleted)(ULONGLONG completed) PURE;
 };
 
-class AsyncWinHttpDownloader : public ult::AsyncWinHttpRequest {
+interface IAsyncHttpBufferEvent : IAsyncHttpEvent {
+  STDMETHOD(SetResult)(LPVOID buffer, ULONGLONG length) PURE;
+};
+
+interface IAsyncHttpFileEvent : IAsyncHttpEvent {
+  STDMETHOD(SetResult)(LPCWSTR file) PURE;
+};
+
+class AsyncHttpBuffer : public AsyncWinHttpRequest {
+
+public:
+
+  HRESULT Request(const std::wstring& url, IAsyncHttpBufferEvent* callback) {
+
+  }
+};
+
+class AsyncHttpDownloader : public ult::AsyncWinHttpRequest {
 
 public:
 
@@ -44,10 +53,9 @@ public:
   ~AsyncWinHttpDownloader(void) {
   }
 
-  int DownloadString(unsigned id, const std::wstring& url, ult::IAsyncWinHttpEvent* callback,
+  int DownloadBuffer(const std::wstring& url, IAsyncWinHttpBufferEvent* callback,
       bool self_destroy = false) {
     Reset();
-    id_ = id;
     callback_ = callback;
     self_destroy_ = self_destroy;
     dltype_ = kString;
@@ -55,7 +63,7 @@ public:
   }
 
   int DownloadFile(unsigned id, const std::wstring& url, const std::wstring& file_path,
-      ult::IAsyncWinHttpEvent* callback, bool self_destroy = false) {
+      IAsyncWinHttpFileEvent* callback, bool self_destroy = false) {
     Reset();
     id_ = id;
     file_path_ = file_path;
@@ -77,7 +85,7 @@ private:
   }
 
   HRESULT OnContentLength(DWORD length) {
-    content_length_ = length;
+    callback_
     return S_OK;
   }
 
