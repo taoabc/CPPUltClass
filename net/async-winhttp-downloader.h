@@ -26,16 +26,6 @@ interface IAsyncHttpEvent {
   STDMETHOD(SetCompleted)(ULONGLONG completed) PURE;
 };
 
-} //namespace base
-
-interface IAsyncHttpBufferEvent : base::IAsyncHttpEvent {
-  STDMETHOD(SetResult)(LPVOID buffer, ULONGLONG length) PURE;
-};
-
-interface IAsyncHttpFileEvent : base::IAsyncHttpEvent {
-  STDMETHOD(SetResult)(LPCWSTR file) PURE;
-};
-
 class AsyncHttpBase : public AsyncWinHttpRequest {
 
 public:
@@ -73,7 +63,17 @@ private:
   WinHttpConnection connection_;
 };
 
-class AsyncHttpBuffer : public AsyncHttpBase {
+} //namespace base
+
+interface IAsyncHttpBufferEvent : base::IAsyncHttpEvent {
+  STDMETHOD(SetResult)(LPVOID buffer, ULONGLONG length) PURE;
+};
+
+interface IAsyncHttpFileEvent : base::IAsyncHttpEvent {
+  STDMETHOD(SetResult)(LPCWSTR file) PURE;
+};
+
+class AsyncHttpBuffer : public base::AsyncHttpBase {
 
 public:
 
@@ -104,7 +104,7 @@ private:
   IAsyncHttpBufferEvent* callback_;
 };
 
-class AsyncHttpFile : public AsyncHttpBase {
+class AsyncHttpFile : public base::AsyncHttpBase {
 
 public:
 
