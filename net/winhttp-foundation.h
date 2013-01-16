@@ -6,6 +6,14 @@
 #ifndef ULT_NET_WINHTTPFOUNDATION_H_
 #define ULT_NET_WINHTTPFOUNDATION_H_
 
+#ifndef RETURN_IF_FAILED
+#define RETURN_IF_FAILED(x) { HRESULT __result_ = (x); if (FAILED(__result_)) return __result_; }
+#endif
+
+#ifndef RFALSE_IF_FAILED
+#define RFALSE_IF_FAILED(x) { HRESULT __result_ = (x); if (FAILED(__result_)) return false; }
+#endif
+
 #include "../base/handle-base.h"
 
 #include <windows.h>
