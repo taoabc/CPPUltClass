@@ -176,6 +176,44 @@ private:
   }
 };
 
+struct StringReplace {
+  std::wstring operator()(const std::wstring& str, const std::wstring& match, const std::wstring& replaced) {
+    std::wstring result(str);
+    size_t pos = -1;
+    while ((pos = result.find(match)) != std::wstring::npos) {
+      result.replace(pos, match.length(), replaced);
+    }
+    return result;
+  }
+};
+
+struct StringLTrim {
+  std::wstring operator()(const std::wstring& str) {
+    size_t pos = 0;
+    while (L' ' == str.at(pos)) {
+      ++pos;
+    }
+    if (pos != 0) {
+      return str.substr(pos);
+    } else {
+      return str;
+    }
+  }
+};
+
+struct StringRTrim {
+  std::wstring operator()(const std::wstring& str) {
+    size_t pos = str.length() - 1;
+    while (L' ' == str.at(pos)) {
+      --pos;
+    }
+    if (pos != str.length()-1) {
+      return str.substr(0, pos + 1); //second parameter is cout, not position
+    } else {
+      return str;
+    }
+  }
+};
 } //namespace detail
 
 inline std::wstring Utf8ToUnicode(const char* src, int len) {
@@ -269,6 +307,22 @@ inline std::string UrlEncode(const std::wstring& s) {
 
 inline std::wstring GetRandomString(const size_t len, const std::wstring& random_table = L"") {
   return detail::GetRandomString()(len, random_table);
+}
+
+inline std::wstring StringReplace(const std::wstring& str, const std::wstring& match, const std::wstring& replaced) {
+  return detail::StringReplace()(str, match, replaced);
+}
+
+inline std::wstring StringLTrim(const std::wstring& str) {
+  return detail::StringLTrim()(str);
+}
+
+inline std::wstring StringRTrim(const std::wstring& str) {
+  return detail::StringRTrim()(str);
+}
+
+inline std::wstring StringTrim(const std::wstring& str) {
+  return detail::StringLTrim()(detail::StringRTrim()(str));
 }
 
 } //namespace ult
