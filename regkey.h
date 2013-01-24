@@ -170,15 +170,19 @@ public:
 
   std::wstring GetStringValue(const std::wstring& field) {
     DWORD type;
-    wchar_t data[MAX_PATH];
-    DWORD len = sizeof (data);
+    static const size_t kBufferSize = 2048;
+    wchar_t* data = new wchar_t[kBufferSize];
+    DWORD len = sizeof (wchar_t) * kBufferSize;
     if (!GetValue(field, data, &len, &type)) {
+      delete[] data;
       return L"";
     }
+    std::wstring result(data);
+    delete[] data;
     if (type != REG_SZ) {
       return L"";
     }
-    return std::wstring(data, len/sizeof (wchar_t));
+    return result;
   }
 
   bool SetStringValue(const std::wstring& field, const std::wstring& value) {
