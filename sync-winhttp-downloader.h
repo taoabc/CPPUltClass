@@ -7,7 +7,6 @@
 #ifndef ULT_SYNCWINHTTPDOWNLOADER_H_
 #define ULT_SYNCWINHTTPDOWNLOADER_H_
 
-#include "./net/winhttp-downloader-status.h"
 #include "./sync-winhttp-request.h"
 #include "./simple-buffer.h"
 #include "./file-io.h"
