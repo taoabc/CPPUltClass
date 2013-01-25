@@ -53,6 +53,14 @@ public:
     return S_OK;
   }
 
+  HRESULT QueryHeaders(DWORD info_level, LPCWSTR name, LPVOID buffer,
+      LPDWORD buffer_len, LPDWORD index = WINHTTP_NO_HEADER_INDEX) {
+    if (FALSE == ::WinHttpQueryHeaders(handle_, info_level, name, buffer, buffer_len, index)) {
+      return HRESULT_FROM_WIN32(::GetLastError());
+    }
+    return S_OK;
+  }
+
   /* before derived class call this function
   ** some information must be setted
   ** cause this function will call virtual function which
@@ -64,7 +72,7 @@ public:
     }
     DWORD status;
     DWORD len = sizeof (status);
-    if (FALSE == ::WinHttpQueryHeaders(handle_, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+    if (FALSE == QueryHeaders(WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
         WINHTTP_HEADER_NAME_BY_INDEX, &status, &len, WINHTTP_NO_HEADER_INDEX)) {
       return HRESULT_FROM_WIN32(::GetLastError());
     }

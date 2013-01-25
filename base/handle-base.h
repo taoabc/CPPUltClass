@@ -9,7 +9,7 @@
 
 namespace ult {
 
-template <typename Type>
+template <typename T>
 class HandleBase {
 
 public:
@@ -21,19 +21,19 @@ public:
   virtual ~HandleBase(void) {
   };
 
-  bool Attach(Type handle) {
+  bool Attach(T handle) {
     Close();
     handle_ = handle;
     return handle_ != NULL;
   }
 
-  Type Detach(void) {
-    Type h = handle_;
+  T Detach(void) {
+    T h = handle_;
     handle_ = NULL;
     return h;
   }
 
-  Type GetHandle(void) const {
+  T GetHandle(void) const {
     return handle_;
   }
 
@@ -41,7 +41,7 @@ public:
 
 protected:
 
-  Type handle_;
+  T handle_;
 
 }; //class HandleBase
 
