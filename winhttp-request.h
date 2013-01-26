@@ -28,6 +28,10 @@ public:
     req_.Close();
   }
 
+  HINTERNET GetHandle(void) const {
+    return req_.GetHandle();
+  }
+
   HRESULT Request(const std::wstring& url, const std::wstring& headers = L"",
       LPCWSTR referer = WINHTTP_NO_REFERER) {
     RETURN_IF_FAILED(sion_.Initialize(false));
