@@ -66,7 +66,7 @@ public:
     return S_OK;
   }
 
-  HRESULT GetStatusCode(LPDWORD* code) {
+  HRESULT GetStatusCode(LPDWORD code) {
     DWORD len = sizeof (*code);
     if (FALSE == QueryHeaders(WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
         WINHTTP_HEADER_NAME_BY_INDEX, code, &len)) {
