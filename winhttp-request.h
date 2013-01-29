@@ -45,7 +45,7 @@ public:
       WINHTTP_DEFAULT_ACCEPT_TYPES, flag))) {
         return HRESULT_FROM_WIN32(::GetLastError());
     }
-    RETURN_IF_FAILED(::WinHttpSendRequest(req_, headers.c_str(), headers.length(), NULL, 0, headers.length(), NULL));
+    RETURN_IF_FAILED(::WinHttpSendRequest(req_, headers.c_str(), headers.length(), NULL, 0, 0, NULL));
     RETURN_IF_FAILED(::WinHttpReceiveResponse(req_, NULL));
     return S_OK;
   }
