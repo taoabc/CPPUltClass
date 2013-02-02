@@ -45,8 +45,14 @@ public:
       WINHTTP_DEFAULT_ACCEPT_TYPES, flag))) {
         return HRESULT_FROM_WIN32(::GetLastError());
     }
-    RETURN_IF_FAILED(::WinHttpSendRequest(req_, headers.c_str(), headers.length(), NULL, 0, 0, NULL));
-    RETURN_IF_FAILED(::WinHttpReceiveResponse(req_, NULL));
+    DWORD feature = WINHTTP_DISABLE_COOKIES;
+    ::WinHttpSetOption(req_, WINHTTP_OPTION_DISABLE_FEATURE, &feature, sizeof (feature));
+    if (FALSE == ::WinHttpSendRequest(req_, headers.c_str(), -1L, WINHTTP_NO_REQUEST_DATA, 0, 0, NULL)) {
+      return HRESULT_FROM_WIN32(::GetLastError());
+    }
+    if (FALSE == ::WinHttpReceiveResponse(req_, NULL)) {
+      return HRESULT_FROM_WIN32(::GetLastError());
+    }
     return S_OK;
   }
 
