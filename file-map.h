@@ -39,7 +39,8 @@ public:
     if (0 == this->GetFileSize()) {
       return false;
     }
-    file_mapping_ = ::CreateFileMapping(file_, NULL, flprotect, maximum_size >> 32, maximum_size & 0xffffffff, NULL);
+    file_mapping_ = ::CreateFileMapping(file_, NULL, flprotect, maximum_size >> 32,
+        maximum_size & 0xffffffff, NULL);
     if (file_mapping_ == NULL) {
       return false;
     }
@@ -52,7 +53,8 @@ public:
     ULONGLONG real_offset = GranularityFloor(offset, glt);
     DWORD distance = static_cast<DWORD>(offset - real_offset);
     SIZE_T real_map_bytes = map_bytes + distance;
-    pfile_view_ = ::MapViewOfFile(file_mapping_, dwaccess, real_offset >> 32, real_offset & 0xffffffff, real_map_bytes);
+    pfile_view_ = ::MapViewOfFile(file_mapping_, dwaccess, real_offset >> 32,
+        real_offset & 0xffffffff, real_map_bytes);
     return static_cast<void*>((unsigned char*)pfile_view_ + distance);
   }
 

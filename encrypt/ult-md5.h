@@ -89,7 +89,7 @@ struct MD5File {
     return ult::AnsiToUnicode(hex_output);
   }
 };
-}
+} //namespace detail
   
 inline std::wstring MD5String(const std::string& str) {
   return detail::MD5String()(str);
