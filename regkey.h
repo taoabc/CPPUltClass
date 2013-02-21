@@ -72,7 +72,8 @@ public:
   bool Create(HKEY hkey, const std::wstring& subkey, DWORD options = REG_OPTION_NON_VOLATILE,
       DWORD desired = KEY_READ | KEY_WRITE, LPDWORD disposition = NULL) {
     HKEY temp;
-    if (ERROR_SUCCESS != ::RegCreateKeyEx(hkey, subkey.c_str(), 0, NULL, options, desired, NULL, &temp, disposition)) {
+    if (ERROR_SUCCESS != ::RegCreateKeyEx(hkey, subkey.c_str(), 0, NULL, options, desired,
+        NULL, &temp, disposition)) {
       return false;
     }
     hkey_ = temp;
@@ -119,13 +120,15 @@ public:
     return ERROR_SUCCESS == ::RegFlushKey(hkey_);
   }
 
-  bool EnumKey(DWORD index, std::wstring* name, std::wstring* defined_class = NULL, PFILETIME writetime = NULL) {
+  bool EnumKey(DWORD index, std::wstring* name, std::wstring* defined_class = NULL,
+      PFILETIME writetime = NULL) {
     assert(hkey_ != NULL);
     wchar_t buf_name[MAX_PATH];
     DWORD buf_name_len = MAX_PATH;
     wchar_t buf_class[MAX_PATH];
     DWORD buf_class_len = MAX_PATH;
-    if (ERROR_SUCCESS != ::RegEnumKeyEx(hkey_, index, buf_name, &buf_name_len, NULL, buf_class, &buf_class_len, writetime)) {
+    if (ERROR_SUCCESS != ::RegEnumKeyEx(hkey_, index, buf_name, &buf_name_len, NULL,
+        buf_class, &buf_class_len, writetime)) {
       return false;
     }
     name->assign(buf_name, buf_name_len);
@@ -224,11 +227,11 @@ private:
 }; // class RegKey
 
 __declspec(selectany) const RegKey::ParentKeyMap RegKey::key_map_[5] = {
-  {L"HKEY_CLASSES_ROOT", L"HKCR", HKEY_CLASSES_ROOT},
+  {L"HKEY_CLASSES_ROOT",   L"HKCR", HKEY_CLASSES_ROOT},
   {L"HKEY_CURRENT_CONFIG", L"HKCC", HKEY_CURRENT_CONFIG},
-  {L"HKEY_CURRENT_USER", L"HKCU", HKEY_CURRENT_USER},
-  {L"HKEY_LOCAL_MACHINE", L"HKLM", HKEY_LOCAL_MACHINE},
-  {L"HKEY_USERS", L"HKU", HKEY_USERS},
+  {L"HKEY_CURRENT_USER",   L"HKCU", HKEY_CURRENT_USER},
+  {L"HKEY_LOCAL_MACHINE",  L"HKLM", HKEY_LOCAL_MACHINE},
+  {L"HKEY_USERS",          L"HKU",  HKEY_USERS},
 };
 
 } //namespace ult
