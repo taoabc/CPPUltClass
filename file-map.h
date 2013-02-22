@@ -55,6 +55,9 @@ public:
     SIZE_T real_map_bytes = map_bytes + distance;
     pfile_view_ = ::MapViewOfFile(file_mapping_, dwaccess, real_offset >> 32,
         real_offset & 0xffffffff, real_map_bytes);
+    if (pfile_view_ == NULL) {
+      return NULL;
+    }
     return static_cast<void*>((unsigned char*)pfile_view_ + distance);
   }
 
