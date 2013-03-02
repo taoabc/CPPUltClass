@@ -295,7 +295,7 @@ inline bool IsPathFileExist(const std::wstring& pathfile) {
 inline std::wstring GetUpperDirectory(const std::wstring& path) {
   std::wstring tmp(path);
   ult::RemovePathBackslash(&tmp);
-  int pos = tmp.rfind(L'\\');
+  size_t pos = tmp.rfind(L'\\');
   if (pos == std::wstring::npos) {
     return L"";
   }
