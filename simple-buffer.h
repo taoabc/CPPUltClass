@@ -39,6 +39,26 @@ public:
     InitMember();
   }
 
+  bool CopyFrom(const void* data, size_t len) {
+    //if there is not enough space
+    if (capacity_ < len) {
+      if (!Grow(len)) {
+        return false;
+      }
+    }
+    std::memcpy(buffer_, data, len);
+    return true;
+  }
+
+  bool CopyTo(void* data, size_t len) {
+    size_t to_copy = data_size_ > len ? len : data_size_;
+    if (to_copy == 0) {
+      return false;
+    }
+    std::memcpy(data, buffer_, to_copy);
+    return true;
+  }
+
   bool Append(const void* data, size_t len) {
     size_t after_append = data_size_ + len;
     //if length to append is too big
