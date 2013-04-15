@@ -45,10 +45,9 @@ struct UnicodeToMultiByte {
 };
 
 struct SplitString {
-  bool operator()(
-      const std::wstring& src,
-      const std::wstring& separator,
-      std::vector<std::wstring>* vec) {
+  bool operator()(const std::wstring& src,
+                  const std::wstring& separator,
+                  std::vector<std::wstring>* vec) {
     if (src.empty()) {
       return false;
     }
