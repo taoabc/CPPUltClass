@@ -144,7 +144,7 @@ struct MakeSureFolderExist {
     bool ret = false;
     std::wstring normalize_path(folder_path);
     AddPathBackslash()(&normalize_path);
-    while ((index = normalize_path.find(L'\\', index)) != std::string::npos) {
+    while ((index = normalize_path.find(L'\\', index)) != std::wstring::npos) {
       index++;
       std::wstring path = normalize_path.substr(0, index);
       if (0 == CreateDirectory(path.c_str(), NULL)) {
