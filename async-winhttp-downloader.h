@@ -112,7 +112,7 @@ namespace ult {
       file_path_ = file;
       callback_ = callback;
       std::wstring file_folder(ult::GetUpperDirectory(file));
-      ult::MakeSureFolderExist(file_folder);
+      ult::CreateDirectories(file_folder);
       if (!file_.Create(file, true)) {
         return HRESULT_FROM_WIN32(::GetLastError());
       }

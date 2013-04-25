@@ -37,7 +37,7 @@ struct HttpDownloadFile {
     LPVOID buffer;
     DWORD readed;
     std::wstring file_folder(ult::GetUpperDirectory(file));
-    if (!ult::MakeSureFolderExist(file_folder)) {
+    if (!ult::CreateDirectories(file_folder)) {
       return HRESULT_FROM_WIN32(::GetLastError());
     }
     ult::File down_file;
