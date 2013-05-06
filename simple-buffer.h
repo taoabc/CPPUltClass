@@ -80,6 +80,14 @@ public:
     return buffer_;
   }
 
+  bool SetDataSize(size_t data_size) {
+    if (data_size > capacity_) {
+      return false;
+    }
+    data_size_ = data_size;
+    return true;
+  }
+
   bool Reserve(size_t len) {
     return Grow(len);
   }
