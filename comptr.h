@@ -9,12 +9,12 @@
 
 #include <Windows.h>
 
+namespace ult {
+
 template <typename T>
-inline bool IsNull(const T& p) {
+bool IsNull(const T& p) {
   return (p == NULL || p == nullptr);
 }
-
-namespace ult {
 
 template <typename T>
 class ComPtr {
@@ -24,7 +24,7 @@ public:
   ComPtr(void) :
       p_(nullptr) {
   }
-      
+
   ComPtr(T* p) {
     p_ = p;
     if (!IsNull(p_)) {
