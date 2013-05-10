@@ -69,7 +69,7 @@ public:
   }
 
   FARPROC GetProc(const std::wstring& procname) const {
-    int len = procname.length();
+    int len = (int)procname.length();
     char* buf = new char[len*3];
     int outlen = ::WideCharToMultiByte(CP_ACP, 0, procname.c_str(), len, buf, len*3, NULL, NULL);
     std::string ansi_procname(buf, outlen);
