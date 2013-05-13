@@ -57,7 +57,7 @@ struct MD5File {
     }
     LPVOID file_view = NULL;
     ULONGLONG cursor = 0;
-    DWORD map_size = -1;
+    DWORD map_size = (DWORD)-1;
     //minimum map size to try map file, 0x100000 B = 1 MB
     static const DWORD minimum_map_size = 0x100000;
     //main loop to read file from map view

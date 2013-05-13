@@ -8,6 +8,7 @@
 
 #include <string>
 #include <windows.h>
+#include <vector>
 
 namespace ult {
 
@@ -31,7 +32,7 @@ public:
   }
 
   bool IsLoaded(void) const {
-    return (NULL != module_);
+    return (module_ != NULL);
   }
 
   void Attach(HMODULE m) {
@@ -46,10 +47,10 @@ public:
   }
 
   bool Free(void) {
-    if (NULL == module_) {
+    if (module_ == NULL) {
       return true;
     }
-    if (!::FreeLibrary(module_)) {
+    if (FALSE == ::FreeLibrary(module_)) {
       return false;
     }
     module_ = NULL;
@@ -70,17 +71,16 @@ public:
 
   FARPROC GetProc(const std::wstring& procname) const {
     int len = (int)procname.length();
-    char* buf = new char[len*3];
-    int outlen = ::WideCharToMultiByte(CP_ACP, 0, procname.c_str(), len, buf, len*3, NULL, NULL);
-    std::string ansi_procname(buf, outlen);
-    delete[] buf;
+    std::vector<char> buffer(len * 3);
+    int outlen = ::WideCharToMultiByte(CP_ACP, 0, procname.c_str(), len, buffer.data(), len*3, NULL, NULL);
+    std::string ansi_procname(buffer.data(), outlen);
     return GetProc(ansi_procname);
   }
 
 private:
 
   bool LoadOperations(HMODULE new_module) {
-    if (NULL == new_module) {
+    if (new_module == NULL) {
       return false;
     }
     if (!Free()) {
@@ -91,9 +91,7 @@ private:
   }
 
   HMODULE module_;
-
 };
-
 } //namespace ult
 
 #endif

@@ -155,10 +155,10 @@ public:
     DWORD data;
     DWORD len = sizeof (data);
     if (!GetValue(field, &data, &len, &type)) {
-      return -1;
+      return (DWORD)-1;
     }
     if (type != REG_DWORD) {
-      return -1;
+      return (DWORD)-1;
     }
     return data;
   }
@@ -207,11 +207,10 @@ private:
   bool ToParentAndSub(const std::wstring& key, HKEY* parent, std::wstring* sub) {
     int count = sizeof(key_map_) / sizeof (key_map_[0]);
     bool result = false;
-    int a = sizeof (key_map_);
     for (int i = 0; i < count; ++i) {
       if (0 == key.find(key_map_[i].fullname) || 0 == key.find(key_map_[i].shortname)) {
         *parent = key_map_[i].hkey;
-        int pos = key.find(L'\\');
+        size_t pos = key.find(L'\\');
         if (pos != std::wstring::npos) {
           *sub = key.substr(pos+1);
         }

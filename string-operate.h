@@ -56,10 +56,10 @@ struct SplitString {
       vec->push_back(src);
       return true;
     }
-    int pos;
+    size_t pos;
     std::wstring tmp(src);
     std::wstring item;
-    int separator_len = separator.length();
+    size_t separator_len = separator.length();
     while ((pos = tmp.find(separator)) != std::wstring::npos) {
       item = tmp.substr(0, pos);
       if (!item.empty()) {
@@ -76,12 +76,12 @@ struct SplitString {
 
 struct CompareStringNoCase {
   int operator()(const std::wstring& comp1, const std::wstring& comp2) {
-    int len1 = comp1.length();
-    int len2 = comp2.length();
+    size_t len1 = comp1.length();
+    size_t len2 = comp2.length();
     if (len1 != len2) {
       return len1 < len2 ? -1 : 1;
     }
-    for (int i = 0; i < len1; ++i) {
+    for (size_t i = 0; i < len1; ++i) {
       if (!EqWchar(comp1.at(i), comp2.at(i))) {
         return LtWchar(comp1.at(i), comp2.at(i)) ? -1 : 1;
       }
@@ -150,7 +150,7 @@ struct GetRandomString {
     if (random_table_real.empty()) {
       random_table_real = L"1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     }
-    size_t sreal = random_table_real.length();
+    int sreal = (int)random_table_real.length();
     for (size_t i = 0; i < len; ++i) {
       int r = GetRandomInteger(0, sreal);
       random_string.push_back(random_table_real.at(r));
@@ -178,7 +178,7 @@ private:
 struct StringReplace {
   std::wstring operator()(const std::wstring& str, const std::wstring& match, const std::wstring& replaced) {
     std::wstring result(str);
-    size_t pos = -1;
+    size_t pos;
     while ((pos = result.find(match)) != std::wstring::npos) {
       result.replace(pos, match.length(), replaced);
     }
