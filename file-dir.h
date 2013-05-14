@@ -314,20 +314,26 @@ inline std::wstring GetRootDirectory(const std::wstring& path) {
   return detail::GetRootDirectory()(path);
 }
 
-inline std::wstring GetSelfModulePath(void) {
+inline std::wstring GetCurrentExePath(void) {
   wchar_t buf[MAX_PATH];
   ::GetModuleFileName(NULL, buf, MAX_PATH);
   return buf;
 }
 
-inline std::wstring GetSelfModuleDirectory(void) {
-  return GetUpperDirectory(ult::GetSelfModulePath());
+inline std::wstring GetCurrentExeDirectory(void) {
+  return GetUpperDirectory(ult::GetCurrentExePath());
 }
 
 inline std::wstring GetNamedModuleDirectory(const std::wstring& module_name) {
   wchar_t buf[MAX_PATH];
   ::GetModuleFileName(GetModuleHandle(module_name.c_str()), buf, MAX_PATH);
   return GetUpperDirectory(buf);
+}
+
+inline std::wstring GetTempDirectory(void) {
+  std::vector<wchar_t> buffer(MAX_PATH + 1);
+  ::GetTempPath(buffer.size(), buffer.data());
+  return buffer.data();
 }
 
 inline bool CreateDirectories(const std::wstring& path) {
