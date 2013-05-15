@@ -10,9 +10,10 @@
 #define ULT_ENCRYPT_ULTMD5_H_
 
 #include "./md5.h"
-#include "../file-map.h"
+#include "../file-io.h"
 #include "../string-operate.h"
 #include <string>
+#include <vector>
 #include <windows.h>
 
 namespace ult {
@@ -40,46 +41,27 @@ struct MD5String {
 
 struct MD5File {
   std::wstring operator()(const std::wstring& file_name) {
-    ult::FileMap file_map;
-    if (!file_map.Open(file_name)) {
+    ult::File file;
+    if (!file.Open(file_name)) {
       return L"";
     }
-    ULONGLONG file_size = file_map.GetFileSize();
-    if (file_size == 0) {
+    ULONGLONG remain = file.GetSize();
+    if (remain == 0) {
       return L"";
     }
     md5_state_s state;
     md5_byte_t digest[16];
 
     md5_init(&state);
-    if (!file_map.CreateMapping()) {
-      return L"";
-    }
-    LPVOID file_view = NULL;
-    ULONGLONG cursor = 0;
-    DWORD map_size = (DWORD)-1;
-    //minimum map size to try map file, 0x100000 B = 1 MB
-    static const DWORD minimum_map_size = 0x100000;
-    //main loop to read file from map view
-    while (cursor < file_size) {
-      //first part try and last part may trigger this
-      if (map_size > (file_size - cursor)) {
-        map_size = (DWORD)(file_size - cursor);
+    static const size_t buffer_len = 8192;
+    std::vector<char> buffer(buffer_len);
+    DWORD readed;
+    while (remain > 0) {
+      if (!file.Read(buffer.data(), buffer_len, &readed)) {
+        break;
       }
-      //sub loop to try a situable size of file view
-      do {
-        file_view = file_map.MapView(cursor, map_size);
-        if (file_view == NULL) {
-          map_size >>= 1;
-        }
-      } while (file_view == NULL && map_size > minimum_map_size);
-      //if success, deal with it
-      if (file_view != NULL) {
-        md5_append(&state, (const md5_byte_t*)file_view, map_size);
-        cursor += map_size;
-      } else {
-        return L"";
-      }
+      md5_append(&state, (const md5_byte_t*)buffer.data(), readed);
+      remain -= readed;
     }
     md5_finish(&state, digest);
     char hex_output[16*2 + 1];

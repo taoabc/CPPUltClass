@@ -3,8 +3,8 @@
 ** author
 **   taoabc@gmail.com
 */
-#ifndef ULT_SYNCSOCKET_H_
-#define ULT_SYNCSOCKET_H_
+#ifndef ULT_SOCKET_H_
+#define ULT_SOCKET_H_
 
 #include <WinSock2.h>
 
@@ -15,16 +15,16 @@ namespace ult {
 namespace detail {
 
 struct SocketStartup {
-  bool operator()(void) {
+  bool operator()(byte minor, byte major) {
     WORD version_requested;
     WSADATA wsadata;
-    version_requested = MAKEWORD(2, 2);
+    version_requested = MAKEWORD(minor, major);
     int err = WSAStartup(version_requested, &wsadata);
     if (0 != err) {
       return false;
     }
-    if (2 != LOBYTE(wsadata.wVersion) ||
-        2 != HIBYTE(wsadata.wVersion)) {
+    if (minor != LOBYTE(wsadata.wVersion) ||
+        major != HIBYTE(wsadata.wVersion)) {
       WSACleanup();
       return false;
     }
@@ -50,12 +50,12 @@ struct HostToInetAddr {
 
 } //namespace detail
 
-inline bool SocketStartup(void) {
-  return detail::SocketStartup()();
+inline bool SocketStartup(byte minor = 2, byte major = 2) {
+  return detail::SocketStartup()(minor, major);
 }
 
 inline bool SocketCleanup(void) {
-  return (0 == ::WSACleanup());
+  return (0 == WSACleanup());
 }
 
 inline unsigned long HostToInetAddr(const char* raw_host) {
@@ -159,7 +159,6 @@ public:
   }
 
   int SendTo(const char* data, int len, const char* host, u_short port, unsigned millisec = -1) {
-    Close();
     socket_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
     sockaddr_in addr;
     addr.sin_family = AF_INET;
