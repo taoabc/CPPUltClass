@@ -15,7 +15,7 @@ namespace ult {
 namespace detail {
 
 struct SocketStartup {
-  bool operator()(byte minor, byte major) {
+  bool operator()(BYTE minor, BYTE major) {
     WORD version_requested;
     WSADATA wsadata;
     version_requested = MAKEWORD(minor, major);
@@ -50,7 +50,7 @@ struct HostToInetAddr {
 
 } //namespace detail
 
-inline bool SocketStartup(byte minor = 2, byte major = 2) {
+inline bool SocketStartup(BYTE minor = 2, BYTE major = 2) {
   return detail::SocketStartup()(minor, major);
 }
 
