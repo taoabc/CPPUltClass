@@ -15,12 +15,12 @@ class File {
 
 public:
 
-  File(void) : hfile_(NULL) {
+  File(void) : hfile_(INVALID_HANDLE_VALUE) {
 
   }
 
   ~File(void) {
-    if (hfile_ != NULL) {
+    if (hfile_ != INVALID_HANDLE_VALUE) {
       Close();
     }
   }
@@ -30,7 +30,7 @@ public:
   }
 
   bool IsOpened(void) {
-    return hfile_ != NULL;
+    return hfile_ != INVALID_HANDLE_VALUE;
   }
 
   void Attach(HANDLE hfile) {
@@ -40,23 +40,24 @@ public:
 
   HANDLE Detach(void) {
     HANDLE f = hfile_;
-    hfile_ = NULL;
+    hfile_ = INVALID_HANDLE_VALUE;
     return f;
   }
 
   bool Close(void) {
-    if (hfile_ == NULL) {
+    if (hfile_ == INVALID_HANDLE_VALUE) {
       return true;
     }
     if (FALSE == ::CloseHandle(hfile_)) {
       return false;
     }
-    hfile_ = NULL;
+    hfile_ = INVALID_HANDLE_VALUE;
     return true;
   }
 
-  bool Open(const std::wstring& filename, DWORD dwaccess = GENERIC_READ) {
-    return OpenOperation(filename, dwaccess);
+  bool Open(const std::wstring& filename, DWORD dwaccess = GENERIC_READ,
+            DWORD share_mode = FILE_SHARE_READ) {
+    return OpenOperation(filename, dwaccess, share_mode);
   }
 
   bool Create(const std::wstring& filename, bool create_always) {
@@ -199,9 +200,9 @@ public:
 
 private:
   
-  bool OpenOperation(const std::wstring& filename, DWORD dwaccess) {
-    hfile_ = ::CreateFile(filename.c_str(), dwaccess, FILE_SHARE_READ, NULL,
-      OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  bool OpenOperation(const std::wstring& filename, DWORD dwaccess, DWORD share_mode) {
+    hfile_ = ::CreateFile(filename.c_str(), dwaccess, share_mode, NULL,
+                          OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hfile_ == INVALID_HANDLE_VALUE) {
       return false;
     }
