@@ -219,6 +219,46 @@ struct GetFolderPath {
   }
 };
 
+struct GetKnownFolderPath {
+  typedef HRESULT (WINAPI *PSHGetKnownFolderPath)(REFKNOWNFOLDERID rfid,
+      DWORD dwFlags, HANDLE hToken, PWSTR *ppszPath);
+
+  GetKnownFolderPath(void) {
+    hinst_dll_ = ::LoadLibrary(L"Shell32.dll");
+  }
+
+  ~GetKnownFolderPath(void) {
+    if (hinst_dll_ != NULL) {
+      ::FreeLibrary(hinst_dll_);
+    }
+  }
+
+  std::wstring operator()(REFKNOWNFOLDERID rfid, DWORD flags, HANDLE token) {
+    std::wstring result;
+    do {
+      if (hinst_dll_ == NULL) {
+        break;
+      }
+      PSHGetKnownFolderPath shfunc = (PSHGetKnownFolderPath)GetProcAddress(
+          hinst_dll_, "SHGetKnownFolderPath");
+      if (shfunc == NULL) {
+        break;
+      }
+      PWSTR ppath;
+      HRESULT hr = shfunc(rfid, flags, token, &ppath);
+      if (FAILED(hr)) {
+        break;
+      }
+      result = ppath;
+      ::CoTaskMemFree(ppath);
+    } while (false);
+    return result;
+  }
+
+private:
+  HMODULE hinst_dll_;
+};
+
 struct GetFileSize {
   ULONGLONG operator()(const std::wstring& file) {
     WIN32_FILE_ATTRIBUTE_DATA fad;
@@ -290,16 +330,40 @@ inline std::wstring GetFolderPath(int csidl, HANDLE htoken = NULL, DWORD flags =
   return detail::GetFolderPath()(csidl, htoken, flags);
 }
 
+inline std::wstring GetKnownFolderPath(REFKNOWNFOLDERID rfid, DWORD flags = KF_FLAG_NO_ALIAS, HANDLE token = NULL) {
+  return detail::GetKnownFolderPath()(rfid, flags, token);
+}
+
 inline std::wstring GetProgramFilesDirectory(void) {
-  return GetFolderPath(CSIDL_PROGRAM_FILES | CSIDL_FLAG_CREATE);
+  std::wstring dir = GetKnownFolderPath(FOLDERID_ProgramFiles);
+  if (dir.empty()) {
+    dir = GetFolderPath(CSIDL_PROGRAM_FILES);
+  }
+  return dir;
 }
 
 inline std::wstring GetAppDataDirectory(void) {
-  return GetFolderPath(CSIDL_APPDATA | CSIDL_FLAG_CREATE);
+  std::wstring dir = GetKnownFolderPath(FOLDERID_RoamingAppData);
+  if (dir.empty()) {
+    dir = GetFolderPath(CSIDL_APPDATA);
+  }
+  return dir;
 }
 
 inline std::wstring GetSystemDirectory(void) {
-  return GetFolderPath(CSIDL_SYSTEM);
+  std::wstring dir = GetKnownFolderPath(FOLDERID_System);
+  if (dir.empty()) {
+    dir = GetFolderPath(CSIDL_SYSTEM);
+  }
+  return dir;
+}
+
+inline std::wstring GetProgramDataDirectory(void) {
+  std::wstring dir = GetKnownFolderPath(FOLDERID_ProgramData);
+  if (dir.empty()) {
+    dir = GetFolderPath(CSIDL_COMMON_APPDATA);
+  }
+  return dir;
 }
 
 inline bool IsPathFileExist(const std::wstring& path) {
