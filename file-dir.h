@@ -214,7 +214,7 @@ struct RecursiveRemoveDirectory {
 };
 
 struct GetFolderPath {
-  std::wstring operator()(int csidl, HANDLE htoken, DWORD flags) {
+  std::wstring operator()(int csidl, DWORD flags, HANDLE htoken) {
     wchar_t buffer[MAX_PATH];
     HRESULT hr = ::SHGetFolderPath(NULL, csidl, htoken, flags, buffer);
     if (FAILED(hr)) {
