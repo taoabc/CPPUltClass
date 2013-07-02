@@ -11,6 +11,7 @@
 #include <vector>
 #include <Windows.h>
 #include <cwctype>
+#include <cctype>
 #include <ctime>
 #include <cstdlib>
 
@@ -75,7 +76,8 @@ struct SplitString {
 };
 
 struct CompareStringNoCase {
-  int operator()(const std::wstring& comp1, const std::wstring& comp2) {
+  template <typename T>
+  int operator()(const T& comp1, const T& comp2) {
     size_t len1 = comp1.length();
     size_t len2 = comp2.length();
     if (len1 != len2) {
@@ -93,9 +95,15 @@ private:
   bool EqWchar(const wchar_t& c1, const wchar_t& c2) {
     return std::towupper(c1) == std::towupper(c2);
   }
+  bool EqWchar(const char& c1, const char& c2) {
+    return std::toupper(c1) == std::toupper(c2);
+  }
 
   bool LtWchar(const wchar_t& c1, const wchar_t& c2) {
     return std::towupper(c1) < std::towupper(c2);
+  }
+  bool LtWchar(const char& c1, const char& c2) {
+    return std::toupper(c1) < std::toupper(c2);
   }
 };
 
@@ -269,8 +277,11 @@ inline bool SplitString(const std::wstring& src,
   return detail::SplitString()(src, separator, vec);
 }
 
-inline int CompareStringNoCase(const std::wstring& comp1,
-                               const std::wstring& comp2) {
+inline int CompareStringNoCase(const std::wstring& comp1, const std::wstring& comp2) {
+  return detail::CompareStringNoCase()(comp1, comp2);
+}
+
+inline int CompareStringNoCase(const std::string& comp1, const std::string& comp2) {
   return detail::CompareStringNoCase()(comp1, comp2);
 }
 

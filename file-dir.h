@@ -11,6 +11,11 @@
 #include <shlobj.h>
 #include <string>
 #include <vector>
+#include <KnownFolders.h>
+
+#if (NTDDI_VERSION < NTDDI_VISTA)
+# define KF_FLAG_NO_ALIAS           0x00001000
+#endif
 
 namespace ult {
   
@@ -326,8 +331,8 @@ inline std::wstring GetMaxFreeSpaceDrive(ULONGLONG* freesize = NULL) {
   return detail::GetMaxFreeSpaceDrive()(freesize);
 }
 
-inline std::wstring GetFolderPath(int csidl, HANDLE htoken = NULL, DWORD flags = SHGFP_TYPE_CURRENT) {
-  return detail::GetFolderPath()(csidl, htoken, flags);
+inline std::wstring GetFolderPath(int csidl, DWORD flags = SHGFP_TYPE_CURRENT, HANDLE htoken = NULL) {
+  return detail::GetFolderPath()(csidl, flags, htoken);
 }
 
 inline std::wstring GetKnownFolderPath(REFKNOWNFOLDERID rfid, DWORD flags = KF_FLAG_NO_ALIAS, HANDLE token = NULL) {
