@@ -8,6 +8,7 @@
 #define ULT_STRING_OPERATE_H_
 
 #include <string>
+#include <sstream>
 #include <vector>
 #include <Windows.h>
 #include <cwctype>
@@ -23,10 +24,9 @@ struct MultiByteToUnicode {
   std::wstring operator()(const char* src, int len, unsigned int codepage) {
     std::wstring result;
     if (len > 0) {
-      wchar_t* buf = new wchar_t[len];
-      int outlen = ::MultiByteToWideChar(codepage, 0, src, len, buf, len);
-      result.assign(buf, outlen);
-      delete[] buf;
+      std::vector<wchar_t> buffer(len);
+      int outlen = ::MultiByteToWideChar(codepage, 0, src, len, buffer.data(), len);
+      result.assign(buffer.data(), outlen);
     }
     return result;
   }
@@ -36,73 +36,42 @@ struct UnicodeToMultiByte {
   std::string operator()(const wchar_t* src, int len, unsigned int codepage) {
     std::string result;
     if (len > 0) {
-      char* buf = new char[len*3];
-      int outlen = ::WideCharToMultiByte(codepage, 0, src, len, buf, len*3, NULL, NULL);
-      result.assign(buf, outlen);
-      delete[] buf;
+      std::vector<char> buffer(len*3);
+      int outlen = ::WideCharToMultiByte(codepage, 0, src, len, buffer.data(), buffer.capacity(), NULL, NULL);
+      result.assign(buffer.data(), outlen);
     }
     return result;
   }
 };
 
-struct SplitString {
-  bool operator()(const std::wstring& src,
-                  const std::wstring& separator,
-                  std::vector<std::wstring>* vec) {
-    if (src.empty()) {
-      return false;
-    }
-    vec->clear();
-    if (separator.empty()) {
-      vec->push_back(src);
-      return true;
-    }
-    size_t pos;
-    std::wstring tmp(src);
-    std::wstring item;
-    size_t separator_len = separator.length();
-    while ((pos = tmp.find(separator)) != std::wstring::npos) {
-      item = tmp.substr(0, pos);
-      if (!item.empty()) {
-        vec->push_back(item);
-      }
-      tmp = tmp.substr(pos + separator_len);
-    }
-    if (!tmp.empty()) {
-      vec->push_back(tmp);
-    }
-    return true;
-  }
-};
-
 struct CompareStringNoCase {
-  template <typename T>
-  int operator()(const T& comp1, const T& comp2) {
+  template <typename CharT>
+  int operator()(const std::basic_string<CharT>& comp1, const std::basic_string<CharT>& comp2) {
     size_t len1 = comp1.length();
     size_t len2 = comp2.length();
     if (len1 != len2) {
       return len1 < len2 ? -1 : 1;
     }
     for (size_t i = 0; i < len1; ++i) {
-      if (!EqWchar(comp1.at(i), comp2.at(i))) {
-        return LtWchar(comp1.at(i), comp2.at(i)) ? -1 : 1;
+      if (!EqCharT(comp1.at(i), comp2.at(i))) {
+        return LtCharT(comp1.at(i), comp2.at(i)) ? -1 : 1;
       }
     }
     return 0;
   }
 
 private:
-  bool EqWchar(const wchar_t& c1, const wchar_t& c2) {
+  bool EqCharT(const wchar_t& c1, const wchar_t& c2) {
     return std::towupper(c1) == std::towupper(c2);
   }
-  bool EqWchar(const char& c1, const char& c2) {
+  bool EqCharT(const char& c1, const char& c2) {
     return std::toupper(c1) == std::toupper(c2);
   }
 
-  bool LtWchar(const wchar_t& c1, const wchar_t& c2) {
+  bool LtCharT(const wchar_t& c1, const wchar_t& c2) {
     return std::towupper(c1) < std::towupper(c2);
   }
-  bool LtWchar(const char& c1, const char& c2) {
+  bool LtCharT(const char& c1, const char& c2) {
     return std::toupper(c1) < std::toupper(c2);
   }
 };
@@ -182,45 +151,6 @@ private:
     std::srand((unsigned int)std::time(NULL));
   }
 };
-
-struct StringReplace {
-  std::wstring operator()(const std::wstring& str, const std::wstring& match, const std::wstring& replaced) {
-    std::wstring result(str);
-    size_t pos;
-    while ((pos = result.find(match)) != std::wstring::npos) {
-      result.replace(pos, match.length(), replaced);
-    }
-    return result;
-  }
-};
-
-struct StringLTrim {
-  std::wstring operator()(const std::wstring& str) {
-    size_t pos = 0;
-    while (L' ' == str.at(pos)) {
-      ++pos;
-    }
-    if (pos != 0) {
-      return str.substr(pos);
-    } else {
-      return str;
-    }
-  }
-};
-
-struct StringRTrim {
-  std::wstring operator()(const std::wstring& str) {
-    size_t pos = str.length() - 1;
-    while (L' ' == str.at(pos)) {
-      --pos;
-    }
-    if (pos != str.length()-1) {
-      return str.substr(0, pos + 1); //second parameter is cout, not position
-    } else {
-      return str;
-    }
-  }
-};
 } //namespace detail
 
 inline std::wstring Utf8ToUnicode(const char* src, int len) {
@@ -271,20 +201,6 @@ inline std::string Utf8ToAnsi(const std::string& src) {
   return UnicodeToAnsi(Utf8ToUnicode(src));
 }
 
-inline bool SplitString(const std::wstring& src,
-                        const std::wstring& separator,
-                        std::vector<std::wstring>* vec) {
-  return detail::SplitString()(src, separator, vec);
-}
-
-inline int CompareStringNoCase(const std::wstring& comp1, const std::wstring& comp2) {
-  return detail::CompareStringNoCase()(comp1, comp2);
-}
-
-inline int CompareStringNoCase(const std::string& comp1, const std::string& comp2) {
-  return detail::CompareStringNoCase()(comp1, comp2);
-}
-
 inline std::wstring IntToString(__int64 num) {
   std::wstring result;
   if (num < 0) {
@@ -319,22 +235,78 @@ inline std::wstring GetRandomString(const size_t len, const std::wstring& random
   return detail::GetRandomString()(len, random_table);
 }
 
-inline std::wstring StringReplace(const std::wstring& str, const std::wstring& match, const std::wstring& replaced) {
-  return detail::StringReplace()(str, match, replaced);
+template <typename CharT>
+void StringSplit(const std::basic_string<CharT>& str,
+    const CharT& separator, std::vector<std::basic_string<CharT> >* vec) {
+  if (str.empty()) {
+    return;
+  }
+  std::basic_istringstream<CharT> iss(str);
+  std::basic_string<CharT> s;
+  while (std::getline(iss, s, separator)) {
+    vec->push_back(s);
+  }
 }
 
-inline std::wstring StringLTrim(const std::wstring& str) {
-  return detail::StringLTrim()(str);
+template <typename CharT>
+void StringSplit(const std::basic_string<CharT>& str,
+  const std::basic_string<CharT>& separator, std::vector<std::basic_string<CharT> >* vec) {
+  if (str.empty()) {
+    return;
+  }
+
+  if (separator.empty()) {
+    vec->push_back(str);
+    return;
+  }
+  size_t pos;
+  std::basic_string<CharT> tmp(str);
+  std::basic_string<CharT> item;
+  size_t separator_len = separator.length();
+  while ((pos = tmp.find(separator)) != std::basic_string<CharT>::npos) {
+    item = tmp.substr(0, pos);
+    vec->push_back(item);
+    tmp = tmp.substr(pos + separator_len);
+  }
+  if (!tmp.empty()) {
+    vec->push_back(tmp);
+  }
 }
 
-inline std::wstring StringRTrim(const std::wstring& str) {
-  return detail::StringRTrim()(str);
+template <typename CharT>
+int StringICompare(const std::basic_string<CharT>& comp1, const std::basic_string<CharT>& comp2) {
+  return detail::CompareStringNoCase()(comp1, comp2);
 }
 
-inline std::wstring StringTrim(const std::wstring& str) {
-  return detail::StringLTrim()(detail::StringRTrim()(str));
+template <typename CharT>
+std::basic_string<CharT> StringReplace(const std::basic_string<CharT>& str,
+    const std::basic_string<CharT>& match, const std::basic_string<CharT>& replaced) {
+  std::wstring result(str);
+  size_t pos;
+  while ((pos = result.find(match)) != std::basic_string<CharT>::npos) {
+    result.replace(pos, match.length(), replaced);
+  }
+  return result;
 }
 
+template <typename CharT>
+std::basic_string<CharT> StringLTrim(const std::basic_string<CharT>& str) {
+  std::basic_string<CharT> result = str;
+  result.erase(0, str.find_first_not_of(' '));
+  return result;
+}
+
+template <typename CharT>
+std::basic_string<CharT> StringRTrim(const std::basic_string<CharT>& str) {
+  std::basic_string<CharT> result = str;
+  result.erase(str.find_last_not_of(' ') + 1);
+  return result;
+}
+
+template <typename CharT>
+std::basic_string<CharT> StringTrim(const std::basic_string<CharT>& str) {
+  return StringLTrim(StringRTrim(str));
+}
 } //namespace ult
 
 #endif // ULT_STRING_H_
