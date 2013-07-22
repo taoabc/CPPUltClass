@@ -291,16 +291,12 @@ std::basic_string<CharT> StringReplace(const std::basic_string<CharT>& str,
 
 template <typename CharT>
 std::basic_string<CharT> StringLTrim(const std::basic_string<CharT>& str) {
-  std::basic_string<CharT> result = str;
-  result.erase(0, str.find_first_not_of(' '));
-  return result;
+  return str.substr(str.find_first_not_of(' '));
 }
 
 template <typename CharT>
 std::basic_string<CharT> StringRTrim(const std::basic_string<CharT>& str) {
-  std::basic_string<CharT> result = str;
-  result.erase(str.find_last_not_of(' ') + 1);
-  return result;
+  return str.substr(0, str.find_last_not_of(' ') + 1);
 }
 
 template <typename CharT>
