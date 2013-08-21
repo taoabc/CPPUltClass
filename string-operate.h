@@ -279,7 +279,7 @@ int StringICompare(const std::basic_string<CharT>& comp1, const std::basic_strin
 template <typename CharT>
 std::basic_string<CharT> StringReplace(const std::basic_string<CharT>& str,
     const std::basic_string<CharT>& match, const std::basic_string<CharT>& replaced) {
-  std::wstring result(str);
+  std::basic_string<CharT> result(str);
   size_t pos;
   while ((pos = result.find(match)) != std::basic_string<CharT>::npos) {
     result.replace(pos, match.length(), replaced);
