@@ -44,20 +44,18 @@ struct UnicodeToMultiByte {
   }
 };
 
-struct CompareStringNoCase {
+struct StringICompare {
   template <typename CharT>
   int operator()(const std::basic_string<CharT>& comp1, const std::basic_string<CharT>& comp2) {
     size_t len1 = comp1.length();
     size_t len2 = comp2.length();
-    if (len1 != len2) {
-      return len1 < len2 ? -1 : 1;
-    }
-    for (size_t i = 0; i < len1; ++i) {
+    size_t cmplen = len1 < len2 ? len1 : len2;
+    for (size_t i = 0; i < cmplen; ++i) {
       if (!EqCharT(comp1.at(i), comp2.at(i))) {
         return LtCharT(comp1.at(i), comp2.at(i)) ? -1 : 1;
       }
     }
-    return 0;
+    return len1 - len2;
   }
 
 private:
@@ -275,7 +273,7 @@ void StringSplit(const std::basic_string<CharT>& str,
 
 template <typename CharT>
 int StringICompare(const std::basic_string<CharT>& comp1, const std::basic_string<CharT>& comp2) {
-  return detail::CompareStringNoCase()(comp1, comp2);
+  return detail::StringICompare()(comp1, comp2);
 }
 
 template <typename CharT>
