@@ -56,11 +56,11 @@ public:
     return static_cast<T*>(p_);
   }
 
-  T** operator&() {
+  T** operator&(void) {
     return &p_;
   }
 
-  T* operator->() const {
+  T* operator->(void) const {
     return p_;
   }
 
@@ -79,8 +79,12 @@ public:
     return (*this = p.p_);
   }
 
-  bool operator!() const {
+  bool operator!(void) const {
     return IsNull(p_);
+  }
+
+  operator bool(void) const {
+    return !IsNull(p_);
   }
 
   void Attach(T* p) {
