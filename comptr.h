@@ -7,8 +7,6 @@
 #ifndef ULT_COMPTR_H_
 #define ULT_COMPTR_H_
 
-#include <Windows.h>
-
 namespace ult {
 
 template <typename T>
