@@ -280,9 +280,10 @@ template <typename CharT>
 std::basic_string<CharT> StringReplace(const std::basic_string<CharT>& str,
     const std::basic_string<CharT>& match, const std::basic_string<CharT>& replaced) {
   std::basic_string<CharT> result(str);
-  size_t pos;
-  while ((pos = result.find(match)) != std::basic_string<CharT>::npos) {
+  size_t pos = 0;
+  while ((pos = result.find(match, pos)) != std::basic_string<CharT>::npos) {
     result.replace(pos, match.length(), replaced);
+    pos += replaced.length();
   }
   return result;
 }
