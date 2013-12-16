@@ -1,0 +1,88 @@
+#ifndef ULT_COMIMPL_H_
+#define ULT_COMIMPL_H_
+
+#include <Windows.h>
+
+#ifndef RETURN_IF_FAILED
+#define RETURN_IF_FAILED(x) { HRESULT __result_ = (x); if (FAILED(__result_)) return __result_; }
+#endif
+
+namespace ult
+{
+  class UnknownImpl
+  {
+  public:
+    UnknownImpl(): ref_count_(0) {}
+  protected:
+    ULONG ref_count_;
+  };
+}
+
+#define ULT_QUERYINTERFACE_BEGIN STDMETHOD(QueryInterface) \
+  (REFGUID iid, void **ppobj) {
+
+#define ULT_QUERYINTERFACE_ENTRY(i) else if (iid == IID_ ## i) \
+{ *ppobj = (void *)(i *)this; AddRef(); return S_OK; }
+
+#define ULT_QUERYINTERFACE_ENTRY_UNKNOWN(i) if (iid == IID_IUnknown) \
+{ *ppobj = (void *)(IUnknown *)(i *)this; AddRef(); return S_OK; }
+
+#define ULT_QUERYINTERFACE_BEGIN2(i) ULT_QUERYINTERFACE_BEGIN \
+  ULT_QUERYINTERFACE_ENTRY_UNKNOWN(i) \
+  ULT_QUERYINTERFACE_ENTRY(i)
+
+#define ULT_QUERYINTERFACE_END return E_NOINTERFACE; }
+
+#define ULT_ADDREF_RELEASE \
+  STDMETHOD_(ULONG, AddRef)() { return ++ref_count_; } \
+  STDMETHOD_(ULONG, Release)() { if (--ref_count_ != 0)  \
+  return ref_count_; delete this; return 0; }
+
+#define ULT_UNKNOWN_IMP_SPEC(i) \
+  ULT_QUERYINTERFACE_BEGIN \
+  i \
+  ULT_QUERYINTERFACE_END \
+  ULT_ADDREF_RELEASE
+
+
+#define ULT_UNKNOWN_IMP ULT_QUERYINTERFACE_BEGIN \
+  ULT_QUERYINTERFACE_ENTRY_UNKNOWN(IUnknown) \
+  ULT_QUERYINTERFACE_END \
+  ULT_ADDREF_RELEASE
+
+#define ULT_UNKNOWN_IMP1(i) ULT_UNKNOWN_IMP_SPEC( \
+  ULT_QUERYINTERFACE_ENTRY_UNKNOWN(i) \
+  ULT_QUERYINTERFACE_ENTRY(i) \
+  )
+
+#define ULT_UNKNOWN_IMP2(i1, i2) ULT_UNKNOWN_IMP_SPEC( \
+  ULT_QUERYINTERFACE_ENTRY_UNKNOWN(i1) \
+  ULT_QUERYINTERFACE_ENTRY(i1) \
+  ULT_QUERYINTERFACE_ENTRY(i2) \
+  )
+
+#define ULT_UNKNOWN_IMP3(i1, i2, i3) ULT_UNKNOWN_IMP_SPEC( \
+  ULT_QUERYINTERFACE_ENTRY_UNKNOWN(i1) \
+  ULT_QUERYINTERFACE_ENTRY(i1) \
+  ULT_QUERYINTERFACE_ENTRY(i2) \
+  ULT_QUERYINTERFACE_ENTRY(i3) \
+  )
+
+#define ULT_UNKNOWN_IMP4(i1, i2, i3, i4) ULT_UNKNOWN_IMP_SPEC( \
+  ULT_QUERYINTERFACE_ENTRY_UNKNOWN(i1) \
+  ULT_QUERYINTERFACE_ENTRY(i1) \
+  ULT_QUERYINTERFACE_ENTRY(i2) \
+  ULT_QUERYINTERFACE_ENTRY(i3) \
+  ULT_QUERYINTERFACE_ENTRY(i4) \
+  )
+
+#define ULT_UNKNOWN_IMP5(i1, i2, i3, i4, i5) ULT_UNKNOWN_IMP_SPEC( \
+  ULT_QUERYINTERFACE_ENTRY_UNKNOWN(i1) \
+  ULT_QUERYINTERFACE_ENTRY(i1) \
+  ULT_QUERYINTERFACE_ENTRY(i2) \
+  ULT_QUERYINTERFACE_ENTRY(i3) \
+  ULT_QUERYINTERFACE_ENTRY(i4) \
+  ULT_QUERYINTERFACE_ENTRY(i5) \
+  )
+
+#endif
