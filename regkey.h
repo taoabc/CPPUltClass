@@ -172,19 +172,19 @@ public:
   }
 
   std::wstring GetStringValue(const std::wstring& field) {
-    DWORD type;
-    static const size_t kBufferSize = 2048;
-    wchar_t* data = new wchar_t[kBufferSize];
-    DWORD len = sizeof (wchar_t) * kBufferSize;
-    if (!GetValue(field, data, &len, &type)) {
-      delete[] data;
-      return L"";
-    }
-    std::wstring result(data);
-    delete[] data;
-    if (type != REG_SZ) {
-      return L"";
-    }
+    std::wstring result;
+    do {
+      DWORD type;
+      std::vector<char> buffer(2048);
+      DWORD len = buffer.capacity();
+      LONG ret = ::RegQueryValueEx(hkey_, field.c_str(), NULL, &type, (LPBYTE)buffer.data(), &len);
+      if (ret == ERROR_MORE_DATA) {
+        buffer.reserve(len);
+        ret = ::RegQueryValueEx(hkey_, field.c_str(), NULL, &type, (LPBYTE)buffer.data(), &len);
+      }
+      if (ret != ERROR_SUCCESS || type != REG_SZ) break;
+      result.assign((wchar_t*)buffer.data(), len/sizeof(wchar_t));
+    } while (false);
     return result;
   }
 
