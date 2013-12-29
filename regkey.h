@@ -16,6 +16,23 @@ class RegKey {
 
 public:
 
+  static bool ToParentAndSub(const std::wstring& key, HKEY* parent, std::wstring* sub) {
+    int count = sizeof(key_map_) / sizeof (key_map_[0]);
+    bool result = false;
+    for (int i = 0; i < count; ++i) {
+      if (0 == key.find(key_map_[i].fullname) || 0 == key.find(key_map_[i].shortname)) {
+        *parent = key_map_[i].hkey;
+        size_t pos = key.find(L'\\');
+        if (pos != std::wstring::npos) {
+          *sub = key.substr(pos+1);
+        }
+        result = true;
+        break;
+      }
+    }
+    return result;
+  }
+
   RegKey(void) :
       hkey_(NULL) {
   }
@@ -203,23 +220,6 @@ private:
     LPCWSTR shortname;
     HKEY hkey;
   };
-
-  bool ToParentAndSub(const std::wstring& key, HKEY* parent, std::wstring* sub) {
-    int count = sizeof(key_map_) / sizeof (key_map_[0]);
-    bool result = false;
-    for (int i = 0; i < count; ++i) {
-      if (0 == key.find(key_map_[i].fullname) || 0 == key.find(key_map_[i].shortname)) {
-        *parent = key_map_[i].hkey;
-        size_t pos = key.find(L'\\');
-        if (pos != std::wstring::npos) {
-          *sub = key.substr(pos+1);
-        }
-        result = true;
-        break;
-      }
-    }
-    return result;
-  }
 
   static const ParentKeyMap key_map_[5];
   HKEY hkey_;
