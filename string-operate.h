@@ -1,9 +1,8 @@
-/*
-** 提供字符串操作
-** author
-**   taoabc@gmail.com
-** 为了方便函数返回字符直接进行操作，字符串操作头文件中的函数大部分通过返回值返回
-*/
+/**
+ * @file
+ * @brief 提供字符串操作，这里使用inline函数，方便大家使用其返回值
+ * @author huhaitao
+ */
 #ifndef ULT_STRING_OPERATE_H_
 #define ULT_STRING_OPERATE_H_
 
@@ -74,6 +73,87 @@ private:
   }
 };
 
+struct StringToLower {
+	template <typename CharT>
+	std::basic_string<CharT> operator()(const std::basic_string<CharT>& str) {
+    std::basic_string<CharT> result(str);
+    for (auto iter = result.begin(); iter != result.end(); ++iter) {
+      *iter = ToLowerCharT(*iter);
+    }
+    return result;
+	}
+private:
+	wchar_t ToLowerCharT(const wchar_t& c) {
+		return std::towlower(c);
+	}
+	char ToLowerCharT(const char& c) {
+		return std::tolower(c);
+	}
+};
+
+struct StringToUpper {
+  template <typename CharT>
+  std::basic_string<CharT> operator()(const std::basic_string<CharT>& str) {
+    std::basic_string<CharT> result(str);
+    for (auto iter = result.begin(); iter != result.end(); ++iter) {
+      *iter = ToUpperCharT(*iter);
+    }
+    return result;
+	}
+private:
+	wchar_t ToUpperCharT(const wchar_t& c) {
+		return std::towupper(c);
+	}
+	char ToUpperCharT(const char& c) {
+		return std::toupper(c);
+	}
+};
+
+#define ISUTF8_CHECK_BIT(ub, b) (ub & (1<<b))
+struct IsUtf8 {
+	bool operator()(const char *text, int len) {
+		int i = 0;
+		const unsigned char *ut = reinterpret_cast<const unsigned char *>(text);
+		int ret = 0;
+		int count = 0;
+		int b = 0;
+
+		while (i < len) {
+			count = 0;
+			b = 7;
+			while (b >= 0 && b <= 7) {
+				if (ISUTF8_CHECK_BIT(ut[i], b)) {
+					count++;
+					b--;
+				} else
+					break;
+			}
+
+			if (count >= 2) {
+				count--;
+			} else if (count != 0) {  
+				return 0;
+			}
+			while (count && i < len) {
+				i++;
+				if (ISUTF8_CHECK_BIT(ut[i], 7) > 0 && 0 == (ISUTF8_CHECK_BIT(ut[i], 6))) {
+					count--;
+					if (len - 1 == i) {     //finish
+						ret = 1;
+						break;
+					}
+				} else {
+					break;
+				}                   //if
+			}                       // while count && i<len
+			if (count > 0)
+				return 0;
+			i++;
+		}                           //while i<len
+		return 1;
+	}
+};
+
 struct UInt64ToString {
   std::wstring operator()(unsigned __int64 num) {
     wchar_t temp[32];
@@ -89,7 +169,6 @@ struct UInt64ToString {
     return result;
   }
 };
-
 
 struct UrlEncode {
   std::string operator()(const char* s, size_t len) {
@@ -116,7 +195,6 @@ struct UrlEncode {
     return encoded;
   }
 };
-
 
 struct GetRandomString {
   std::wstring operator()(const size_t len, const std::wstring& random_table) {
@@ -277,6 +355,20 @@ int StringICompare(const std::basic_string<CharT>& comp1, const std::basic_strin
 }
 
 template <typename CharT>
+const std::basic_string<CharT> StringToLower(const std::basic_string<CharT>& str) {
+	return detail::StringToLower()(str);
+}
+
+template <typename CharT>
+const std::basic_string<CharT> StringToUpper(const std::basic_string<CharT>& str) {
+	return detail::StringToUpper()(str);
+}
+
+inline bool IsUtf8(const std::string& str) {
+	return detail::IsUtf8()(str.data(), str.size());
+}
+
+template <typename CharT>
 std::basic_string<CharT> StringReplace(const std::basic_string<CharT>& str,
     const std::basic_string<CharT>& match, const std::basic_string<CharT>& replaced) {
   std::basic_string<CharT> result(str);
@@ -289,18 +381,26 @@ std::basic_string<CharT> StringReplace(const std::basic_string<CharT>& str,
 }
 
 template <typename CharT>
-std::basic_string<CharT> StringLTrim(const std::basic_string<CharT>& str) {
-  return str.substr(str.find_first_not_of(' '));
+std::basic_string<CharT> StringLTrim(const std::basic_string<CharT>& str, const CharT* trim_chars) {
+  size_t pos = str.find_first_not_of(trim_chars);
+  if (pos == std::basic_string<CharT>::npos) {
+    return std::basic_string<CharT>();
+  }
+  return str.substr(pos);
 }
 
 template <typename CharT>
-std::basic_string<CharT> StringRTrim(const std::basic_string<CharT>& str) {
-  return str.substr(0, str.find_last_not_of(' ') + 1);
+std::basic_string<CharT> StringRTrim(const std::basic_string<CharT>& str, const CharT* trim_chars) {
+  size_t pos = str.find_last_not_of(trim_chars);
+  if (pos == std::basic_string<CharT>::npos) {
+    return std::basic_string<CharT>();
+  }
+  return str.substr(0, pos + 1);
 }
 
 template <typename CharT>
-std::basic_string<CharT> StringTrim(const std::basic_string<CharT>& str) {
-  return StringLTrim(StringRTrim(str));
+std::basic_string<CharT> StringTrim(const std::basic_string<CharT>& str, const CharT* trim_chars) {
+  return StringLTrim(StringRTrim(str, trim_chars), trim_chars);
 }
 } //namespace ult
 
