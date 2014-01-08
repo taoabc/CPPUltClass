@@ -320,7 +320,9 @@ void StringSplit(const std::basic_string<CharT>& str,
   std::basic_istringstream<CharT> iss(str);
   std::basic_string<CharT> s;
   while (std::getline(iss, s, separator)) {
-    vec->push_back(s);
+    if (!s.empty()) {
+      vec->push_back(s);
+    }
   }
 }
 
@@ -330,7 +332,6 @@ void StringSplit(const std::basic_string<CharT>& str,
   if (str.empty()) {
     return;
   }
-
   if (separator.empty()) {
     vec->push_back(str);
     return;
@@ -341,7 +342,9 @@ void StringSplit(const std::basic_string<CharT>& str,
   size_t separator_len = separator.length();
   while ((pos = tmp.find(separator)) != std::basic_string<CharT>::npos) {
     item = tmp.substr(0, pos);
-    vec->push_back(item);
+    if (!item.empty()) {
+      vec->push_back(item);
+    }
     tmp = tmp.substr(pos + separator_len);
   }
   if (!tmp.empty()) {
