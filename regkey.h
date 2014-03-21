@@ -6,9 +6,10 @@
 #ifndef ULT_REGKEY_H_
 #define ULT_REGKEY_H_
 
-#include <Windows.h>
 #include <string>
+#include <vector>
 #include <cassert>
+#include <Windows.h>
 
 namespace ult {
 
@@ -54,6 +55,10 @@ public:
 
   operator HKEY(void) const {
     return hkey_;
+  }
+
+  bool IsOpened(void) const {
+    return hkey_ != NULL;
   }
 
   bool Open(HKEY hkey, const std::wstring& subkey, REGSAM desired = KEY_READ) {
