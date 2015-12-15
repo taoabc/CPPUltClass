@@ -15,6 +15,16 @@ namespace ult {
 
 namespace detail {
 
+struct SRand
+{
+    SRand()
+    {
+        std::srand((unsigned int)std::time(NULL));
+    }
+};
+
+static SRand g_sRand;
+
 struct GetRandomInteger {
   int operator()(int min_number, int max_number) {
     if (min_number > max_number) {
@@ -22,18 +32,7 @@ struct GetRandomInteger {
     }
     return (int)((double)std::rand() / (RAND_MAX + 1) * (max_number - min_number) + min_number);
   }
-
-  GetRandomInteger(void) {
-    SRand();
-  }
-
-private:
-
-  void SRand(void) {
-    std::srand((unsigned int)std::time(NULL));
-  }
 };
-
 
 struct DisorderInteger {
   void operator()(int begin_number, int end_number, std::vector<int>* vec) {
