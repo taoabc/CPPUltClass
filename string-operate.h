@@ -36,7 +36,7 @@ struct UnicodeToMultiByte {
     std::string result;
     if (len > 0) {
       std::vector<char> buffer(len*3);
-      int outlen = ::WideCharToMultiByte(codepage, 0, src, len, buffer.data(), buffer.capacity(), NULL, NULL);
+      int outlen = ::WideCharToMultiByte(codepage, 0, src, len, buffer.data(), (int)buffer.capacity(), NULL, NULL);
       result.assign(buffer.data(), outlen);
     }
     return result;
@@ -300,7 +300,7 @@ inline std::string UrlEncode(const std::string& s) {
 }
 
 inline std::string UrlEncode(const wchar_t* s, size_t len) {
-  return UrlEncode(UnicodeToAnsi(s, len));
+  return UrlEncode(UnicodeToAnsi(s, (int)len));
 }
 
 inline std::string UrlEncode(const std::wstring& s) {
@@ -368,7 +368,7 @@ const std::basic_string<CharT> StringToUpper(const std::basic_string<CharT>& str
 }
 
 inline bool IsUtf8(const std::string& str) {
-	return detail::IsUtf8()(str.data(), str.size());
+	return detail::IsUtf8()(str.data(), (int)str.size());
 }
 
 template <typename CharT>
