@@ -7,6 +7,7 @@
 #define ULT_STRING_OPERATE_H_
 
 #include <string>
+#include <memory>
 #include <sstream>
 #include <vector>
 #include <Windows.h>
@@ -21,25 +22,25 @@ namespace detail {
 
 struct MultiByteToUnicode {
   std::wstring operator()(const char* src, int len, unsigned int codepage) {
-    std::wstring result;
     if (len > 0) {
-      std::vector<wchar_t> buffer(len);
-      int outlen = ::MultiByteToWideChar(codepage, 0, src, len, buffer.data(), len);
-      result.assign(buffer.data(), outlen);
+      int outlen = ::MultiByteToWideChar(codepage, 0, src, len, nullptr, 0);
+      std::unique_ptr<wchar_t[]> buffer = std::make_unique<wchar_t[]>(outlen);
+      outlen = ::MultiByteToWideChar(codepage, 0, src, len, buffer.get(), len);
+      return std::wstring(buffer.get(), outlen);
     }
-    return result;
+    return std::wstring();
   }
 };
 
 struct UnicodeToMultiByte {
   std::string operator()(const wchar_t* src, int len, unsigned int codepage) {
-    std::string result;
     if (len > 0) {
-      std::vector<char> buffer(len*3);
-      int outlen = ::WideCharToMultiByte(codepage, 0, src, len, buffer.data(), (int)buffer.capacity(), NULL, NULL);
-      result.assign(buffer.data(), outlen);
+      int outlen = ::WideCharToMultiByte(codepage, 0, src, len, nullptr, 0, nullptr, nullptr);
+      std::unique_ptr<char[]> buffer = std::make_unique<char[]>(outlen);
+      outlen = ::WideCharToMultiByte(codepage, 0, src, len, buffer.get(), outlen, nullptr, nullptr);
+      return std::string(buffer.get(), outlen);
     }
-    return result;
+    return std::string();
   }
 };
 
